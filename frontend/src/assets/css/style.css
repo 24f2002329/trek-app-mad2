@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: #0a0e17 !important;
+  color: #f8fafc !important;
+}
+
+/* Typography Helpers */
+.text-gradient {
+  background: linear-gradient(135deg, #00f2fe, #4facfe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Premium Glowing Button */
+.btn-glow {
+  background: linear-gradient(135deg, #00f2fe, #4facfe);
+  border: none;
+  color: #0a0e17 !important;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.25);
+  transition: all 0.3s ease;
+}
+
+.btn-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 242, 254, 0.45);
+}
+
+/* Legible Placeholders in Dark Theme Inputs */
+.form-control::placeholder {
+  color: #64748b !important;
+  opacity: 0.75 !important;
+}
