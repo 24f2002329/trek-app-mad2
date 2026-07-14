@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify
+from app.extensions import db
 from app.models.trek import Trek
 from app.models.user import User
 from app.models.booking import Booking
 from app.utils.cache import cached
+from sqlalchemy import func, extract
+import calendar
 
 public_bp = Blueprint("public", __name__, url_prefix="/api/public")
 
@@ -14,11 +17,48 @@ def public_stats():
     total_staff = User.query.filter_by(role=User.ROLE_STAFF).count()
     total_bookings = Booking.query.count()
     
+    # 1. Difficulty distribution
+    difficulty_counts = db.session.query(
+        Trek.difficulty, func.count(Trek.id)
+    ).group_by(Trek.difficulty).all()
+    difficulty_dist = {diff: count for diff, count in difficulty_counts}
+    
+    # 2. Top Treks (by participants)
+    top_treks_query = Trek.query.order_by(Trek.current_participants.desc()).limit(5).all()
+    top_treks = []
+    for t in top_treks_query:
+        top_treks.append({
+            "id": t.id,
+            "name": t.name,
+            "location": t.location,
+            "current_participants": t.current_participants,
+            "max_slots": t.max_slots
+        })
+        
+    # 3. Booking trends
+    trends_query = db.session.query(
+        extract('year', Booking.booking_date).label('year'),
+        extract('month', Booking.booking_date).label('month'),
+        func.count(Booking.id).label('count')
+    ).filter(Booking.status != Booking.STATUS_CANCELLED).group_by('year', 'month').order_by('year', 'month').limit(6).all()
+    
+    booking_trends = []
+    for year, month, count in trends_query:
+        if year is not None and month is not None:
+            month_name = calendar.month_abbr[int(month)]
+            booking_trends.append({
+                "label": f"{month_name} {int(year)}",
+                "count": count
+            })
+            
     return jsonify({
         "total_treks": max(total_treks, 25),
         "total_trekkers": max(total_trekkers, 180),
         "total_staff": max(total_staff, 8),
-        "total_bookings": max(total_bookings, 620)
+        "total_bookings": max(total_bookings, 620),
+        "difficulty_distribution": difficulty_dist,
+        "top_treks": top_treks,
+        "booking_trends": booking_trends
     })
 
 @public_bp.route("/treks", methods=["GET"])
@@ -29,7 +69,7 @@ def public_treks():
     location = request.args.get("location", "")
     duration = request.args.get("duration", "")
     
-    query = Trek.query.filter(Trek.status.in_(["Pending", "Approved", "Open", "Closed", "Completed"]))
+    query = Trek.query.filter(Trek.status.in_(["Approved","Open"]))
     
     if search:
         query = query.filter(
@@ -81,7 +121,7 @@ def public_treks():
             "start_date": t.start_date.isoformat() if t.start_date else "",
             "end_date": t.end_date.isoformat() if t.end_date else "",
             "status": t.status,
-            "booking_close_time": t.booking_close_time.isoformat() if t.booking_close_time else "",
+            "booking_close_time": (t.booking_close_time.isoformat() + "Z") if t.booking_close_time else "",
             "booking_closed": booking_closed
         })
     return jsonify(result)
@@ -112,7 +152,7 @@ def public_trek_detail(trek_id):
         "start_date": t.start_date.isoformat() if t.start_date else "",
         "end_date": t.end_date.isoformat() if t.end_date else "",
         "status": t.status,
-        "booking_close_time": t.booking_close_time.isoformat() if t.booking_close_time else "",
+        "booking_close_time": (t.booking_close_time.isoformat() + "Z") if t.booking_close_time else "",
         "booking_closed": booking_closed,
         "assigned_staff": {
             "id": t.assigned_staff.id,

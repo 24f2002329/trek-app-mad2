@@ -11,6 +11,9 @@
       
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto align-items-center gap-2">
+          <li class="nav-item">
+            <router-link class="nav-link px-3 text-secondary text-hover-light" to="/public-dashboard">Analytics</router-link>
+          </li>
           <!-- Guest Navigation -->
           <template v-if="!isLoggedIn">
             <li class="nav-item">

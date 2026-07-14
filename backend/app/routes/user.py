@@ -35,9 +35,10 @@ def user_dashboard_summary():
             "location": t.location,
             "duration": t.duration,
             "start_date": t.start_date.isoformat() if t.start_date else "",
-            "booking_date": b.booking_date.isoformat() if b.booking_date else "",
+            "booking_date": (b.booking_date.isoformat() + "Z") if b.booking_date else "",
             "slots": b.slots_booked,
-            "status": b.status
+            "status": b.status,
+            "payment_status": b.payment_status
         }
         
         if b.status in [Booking.STATUS_CANCELLED, Booking.STATUS_COMPLETED] or (t.end_date and t.end_date < today) or t.status == "Completed":

@@ -13,6 +13,11 @@ const routes = [
     component: () => import('../views/Treks.vue')
   },
   {
+    path: '/public-dashboard',
+    name: 'PublicDashboard',
+    component: () => import('../views/PublicDashboard.vue')
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),

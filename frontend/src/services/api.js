@@ -1,11 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '', // Proxied automatically by Vite to Flask backend
+  baseURL: import.meta.env.VITE_API_BASE_URL || '', // Proxied automatically by Vite to Flask backend or configured custom base URL
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
 
 // Attach JWT token to requests if present in localStorage
 api.interceptors.request.use(
@@ -204,6 +205,10 @@ export const userService = {
   },
   async getExportStatus(taskId) {
     const response = await api.get(`/api/user/export-status/${taskId}`);
+    return response.data;
+  },
+  async payBooking(bookingId) {
+    const response = await api.post(`/api/booking/bookings/${bookingId}/pay`);
     return response.data;
   }
 };

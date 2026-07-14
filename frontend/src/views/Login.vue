@@ -16,14 +16,14 @@
       <form @submit.prevent="handleLogin">
         <div class="mb-3">
           <label for="email" class="form-label text-secondary small fw-bold">Email Address</label>
-          <input v-model="email" type="email" id="email" class="form-control bg-dark text-light border-secondary py-2" placeholder="Enter your email (e.g. admin@trek.com)" required />
+          <input v-model="email" type="email" id="email" class="form-control bg-dark text-light border-secondary py-2" placeholder="Enter your email" required />
         </div>
         
         <div class="mb-4">
           <div class="d-flex justify-content-between mb-1">
             <label for="password" class="form-label text-secondary small fw-bold mb-0">Password</label>
           </div>
-          <input v-model="password" type="password" id="password" class="form-control bg-dark text-light border-secondary py-2" placeholder="Enter your password (e.g. admin123)" required />
+          <input v-model="password" type="password" id="password" class="form-control bg-dark text-light border-secondary py-2" placeholder="Enter your password" required />
         </div>
 
         <button type="submit" class="btn btn-glow w-100 py-3 rounded-3" :disabled="loading">
