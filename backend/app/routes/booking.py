@@ -4,6 +4,7 @@ from app.models.trek import Trek
 from app.models.user import User
 from app.models.booking import Booking
 from app.utils.decorators import token_required, role_required
+from app.utils.cache import invalidate_trek_cache, invalidate_booking_cache
 
 booking_bp = Blueprint("booking", __name__, url_prefix="/api/booking")
 
@@ -58,6 +59,8 @@ def create_booking():
         trek.current_participants += slots
         try:
             db.session.commit()
+            invalidate_trek_cache(trek_id=trek_id)
+            invalidate_booking_cache(user_id=user_id, guide_id=trek.assigned_staff_id)
             return jsonify({"message": "Booking request submitted successfully"}), 201
         except Exception as e:
             db.session.rollback()
@@ -74,6 +77,8 @@ def create_booking():
     try:
         db.session.add(booking)
         db.session.commit()
+        invalidate_trek_cache(trek_id=trek_id)
+        invalidate_booking_cache(user_id=user_id, guide_id=trek.assigned_staff_id)
         return jsonify({"message": "Booking request submitted successfully"}), 201
     except Exception as e:
         db.session.rollback()
@@ -106,6 +111,8 @@ def cancel_booking(booking_id):
         
     try:
         db.session.commit()
+        invalidate_trek_cache(trek_id=trek.id)
+        invalidate_booking_cache(user_id=user_id, guide_id=trek.assigned_staff_id)
         return jsonify({"message": "Booking cancelled successfully"}), 200
     except Exception as e:
         db.session.rollback()

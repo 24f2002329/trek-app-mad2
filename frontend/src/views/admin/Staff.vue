@@ -52,7 +52,7 @@
               <div class="d-flex justify-content-between align-items-center">
                 <span class="text-info small fw-bold">ID: {{ staff.id }}</span>
                 <span class="badge rounded-pill" :class="staff.is_active ? 'bg-success bg-opacity-25 text-success border border-success border-opacity-25' : 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25'">
-                  {{ staff.is_active ? 'Active 🟢' : 'Deactivated 🔴' }}
+                  {{ staff.is_active ? 'Active' : 'Deactivated' }}
                 </span>
               </div>
               <h5 class="fw-bold text-light mb-1 mt-1">{{ staff.name }}</h5>

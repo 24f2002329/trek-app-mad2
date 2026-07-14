@@ -37,9 +37,9 @@
           <tbody>
             <tr v-for="b in history" :key="b.booking_id">
               <td class="border-secondary border-opacity-10">
-                <div class="fw-bold text-secondary fs-6">{{ b.trek_name }}</div>
-                <span class="small text-muted d-block mt-1">
-                  📍 {{ b.location }} | ⏳ {{ b.duration }} Days | 📅 Started: {{ formatDate(b.start_date) }}
+                <div class="fw-bold text-light fs-6">{{ b.trek_name }}</div>
+                <span class="small text-secondary d-block mt-1">
+                  <i class="bi bi-geo-alt me-1 text-danger"></i>{{ b.location }} | <i class="bi bi-clock me-1 text-warning"></i>{{ b.duration }} Days | <i class="bi bi-calendar-event me-1 text-info"></i>Started: {{ formatDate(b.start_date) }}
                 </span>
               </td>
               <td class="small text-secondary border-secondary border-opacity-10">

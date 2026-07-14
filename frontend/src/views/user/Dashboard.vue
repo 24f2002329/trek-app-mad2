@@ -20,7 +20,7 @@
           <div class="p-3 rounded-3 bg-black bg-opacity-20 border border-info border-opacity-25 d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
               <h5 class="fw-bold text-light mb-1">{{ summary.upcoming_treks[0].trek_name }}</h5>
-              <div class="small text-secondary">📍 {{ summary.upcoming_treks[0].location }} | 📅 Starts: {{ formatDate(summary.upcoming_treks[0].start_date) }}</div>
+              <div class="small text-secondary"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ summary.upcoming_treks[0].location }} | <i class="bi bi-calendar-event me-1 text-warning"></i>Starts: {{ formatDate(summary.upcoming_treks[0].start_date) }}</div>
             </div>
             <div class="text-end">
               <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 mb-1 d-block">{{ summary.upcoming_treks[0].status }}</span>
@@ -57,7 +57,7 @@
                 <tr v-for="b in summary.my_bookings" :key="b.booking_id">
                   <td class="border-secondary border-opacity-10">
                     <div class="fw-bold text-light">{{ b.trek_name }}</div>
-                    <span class="small text-secondary">📍 {{ b.location }} | ⏳ {{ b.duration }} Days</span>
+                    <span class="small text-secondary"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ b.location }} | <i class="bi bi-clock me-1 text-info"></i>{{ b.duration }} Days</span>
                   </td>
                   <td class="small text-secondary border-secondary border-opacity-10">{{ formatDate(b.booking_date) }}</td>
                   <td class="border-secondary border-opacity-10 text-secondary">{{ b.slots }}</td>
@@ -95,7 +95,7 @@
                 <tr v-for="b in summary.booking_history" :key="b.booking_id">
                   <td class="border-secondary border-opacity-10">
                     <div class="fw-bold text-secondary">{{ b.trek_name }}</div>
-                    <span class="small text-muted">📍 {{ b.location }}</span>
+                    <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ b.location }}</span>
                   </td>
                   <td class="border-secondary border-opacity-10 text-secondary">{{ b.slots }}</td>
                   <td class="border-secondary border-opacity-10">
@@ -125,7 +125,7 @@
             <div v-for="trek in summary.recommended_treks" :key="trek.id" class="p-3 rounded-3 bg-black bg-opacity-25 border border-secondary border-opacity-10">
               <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-2 py-1 mb-2 rounded-pill">{{ trek.difficulty }}</span>
               <h5 class="fw-bold text-light mb-1">{{ trek.name }}</h5>
-              <div class="small text-secondary mb-3">📍 {{ trek.location }} | ⏳ {{ trek.duration }} Days</div>
+              <div class="small text-secondary mb-3"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ trek.location }} | <i class="bi bi-clock me-1 text-info"></i>{{ trek.duration }} Days</div>
               
               <div class="d-flex justify-content-between align-items-center">
                 <span class="small text-info">{{ trek.slots_left }} spots left</span>

@@ -173,7 +173,7 @@
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
                       <h6 class="fw-bold text-light mb-0">{{ trek.name }}</h6>
-                      <small class="text-secondary">📍 {{ trek.location }}</small>
+                      <small class="text-secondary"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ trek.location }}</small>
                     </div>
                     <span class="badge bg-secondary bg-opacity-20 text-info border border-info border-opacity-25">
                       {{ getPercentage(trek.current_participants, trek.max_slots) }}% Filled

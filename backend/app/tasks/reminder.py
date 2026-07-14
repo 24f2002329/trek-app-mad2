@@ -36,7 +36,7 @@ def send_daily_reminders():
                         <p style="margin-bottom: 5px;">📍 <strong>Location:</strong> {t.location}</p>
                         <p style="margin-bottom: 5px;">📅 <strong>Start Date:</strong> {t.start_date.strftime('%d %b %Y')}</p>
                         <p style="margin-bottom: 5px;">⏱️ <strong>Duration:</strong> {t.duration} Days</p>
-                        <p style="margin-bottom: 0;">🎟️ <strong>Slots Reserved:</strong> {b.slots}</p>
+                        <p style="margin-bottom: 0;">🎟️ <strong>Slots Reserved:</strong> {b.slots_booked}</p>
                     </div>
                     
                     <p>Please make sure to arrive at the reporting location on time with your gear. If you have any questions, reach out to your assigned guide or staff support.</p>

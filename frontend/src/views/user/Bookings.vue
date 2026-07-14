@@ -57,7 +57,7 @@
               <td class="border-secondary border-opacity-10">
                 <div class="fw-bold text-light fs-6">{{ b.trek_name }}</div>
                 <span class="small text-secondary d-block mt-1">
-                  📍 {{ b.location }} | 📅 Starts: {{ formatDate(b.start_date) }} | ⏳ {{ b.duration }} Days
+                  <i class="bi bi-geo-alt me-1 text-danger"></i>{{ b.location }} | <i class="bi bi-calendar-event me-1 text-warning"></i>Starts: {{ formatDate(b.start_date) }} | <i class="bi bi-clock me-1 text-info"></i>{{ b.duration }} Days
                 </span>
               </td>
               <td class="small text-secondary border-secondary border-opacity-10">

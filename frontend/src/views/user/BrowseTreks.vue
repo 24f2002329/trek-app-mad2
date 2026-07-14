@@ -75,7 +75,7 @@
                   Already Booked
                 </span>
               </div>
-              <span class="text-secondary small">⏳ {{ trek.duration }} Days</span>
+              <span class="text-secondary small"><i class="bi bi-clock me-1 text-info"></i>{{ trek.duration }} Days</span>
             </div>
             
             <h5 class="fw-bold text-light mb-2">{{ trek.name }}</h5>
@@ -85,19 +85,19 @@
 
             <div class="list-group list-group-flush small bg-transparent border-top border-secondary border-opacity-10 pt-3">
               <div class="d-flex justify-content-between mb-2">
-                <span class="text-secondary">📍 Location:</span>
+                <span class="text-secondary"><i class="bi bi-geo-alt me-1 text-danger"></i>Location:</span>
                 <span class="text-light fw-medium text-truncate text-end" style="max-width: 60%;">{{ trek.location }}</span>
               </div>
               <div class="d-flex justify-content-between mb-2">
-                <span class="text-secondary">📅 Departure:</span>
+                <span class="text-secondary"><i class="bi bi-calendar-event me-1 text-warning"></i>Departure:</span>
                 <span class="text-light fw-medium">{{ formatDate(trek.start_date) }}</span>
               </div>
               <div class="d-flex justify-content-between mb-2">
-                <span class="text-secondary">👥 Slots:</span>
+                <span class="text-secondary"><i class="bi bi-people me-1 text-info"></i>Slots:</span>
                 <span class="text-info fw-bold">{{ trek.slots_left }} / {{ trek.max_slots }}</span>
               </div>
               <div class="d-flex justify-content-between mb-2" v-if="trek.booking_close_time">
-                <span class="text-secondary">⏳ Deadline:</span>
+                <span class="text-secondary"><i class="bi bi-alarm me-1 text-warning"></i>Deadline:</span>
                 <span :class="trek.booking_closed ? 'text-danger fw-bold' : 'text-warning fw-medium'">
                   {{ formatDateTime(trek.booking_close_time) }}
                 </span>

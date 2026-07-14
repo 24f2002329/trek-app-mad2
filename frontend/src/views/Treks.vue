@@ -44,7 +44,7 @@
                 <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-3 py-2 rounded-pill">{{ getDifficultyStars(trek.difficulty) }} {{ trek.difficulty }}</span>
                 <span v-if="isLoggedIn && isTrekker && bookedTrekIds.includes(trek.id)" class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 rounded-pill ms-2">Already Booked</span>
               </div>
-              <span class="text-secondary small">⏳ {{ trek.duration }} Days</span>
+              <span class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ trek.duration }} Days</span>
             </div>
             <h3 class="h4 fw-bold text-light mb-2">{{ trek.name }}</h3>
             <p class="text-secondary text-truncate-3 mb-4" style="font-size: 0.95rem;">

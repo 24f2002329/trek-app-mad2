@@ -16,7 +16,7 @@
     <!-- Show footer only on non-dashboard routes -->
     <footer v-if="!isDashboardRoute" class="py-4 text-center border-top border-secondary border-opacity-20 text-secondary z-1 mt-auto">
       <div class="container">
-        <small>&copy; 2026 Trekking Management Application V2. All rights reserved  <br> Made with ❤️ by Devendra.</small>
+        <small>&copy; 2026 Trekking Management Application V2. All rights reserved  <br> Made with <i class="bi bi-heart-fill text-danger mx-1"></i> by Devendra.</small>
       </div>
     </footer>
   </div>

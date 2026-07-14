@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.booking import Booking
 from app.models.staff_profile import StaffProfile
 from app.utils.decorators import token_required, role_required
+from app.utils.cache import cached, invalidate_trek_cache, invalidate_booking_cache
 import datetime as dt
 from sqlalchemy import func
 
@@ -14,6 +15,7 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 @admin_bp.route("/dashboard-summary", methods=["GET"])
 @token_required
 @role_required(User.ROLE_ADMIN)
+@cached(timeout=300, key_prefix="admin_summary", user_specific=False)
 def admin_dashboard_summary():
     total_treks = Trek.query.count()
     total_users = User.query.filter_by(role=User.ROLE_TREKKER).count()
@@ -161,6 +163,7 @@ def create_trek():
     try:
         db.session.add(trek)
         db.session.commit()
+        invalidate_trek_cache()
         return jsonify({"message": "Trek created successfully", "id": trek.id}), 201
     except Exception as e:
         db.session.rollback()
@@ -237,6 +240,7 @@ def update_trek(trek_id):
             
     try:
         db.session.commit()
+        invalidate_trek_cache(trek_id=trek_id)
         return jsonify({"message": "Trek updated successfully"}), 200
     except Exception as e:
         db.session.rollback()
@@ -253,6 +257,7 @@ def delete_trek(trek_id):
         Booking.query.filter_by(trek_id=trek_id).delete()
         db.session.delete(t)
         db.session.commit()
+        invalidate_trek_cache(trek_id=trek_id)
         return jsonify({"message": "Trek and associated bookings deleted successfully"}), 200
     except Exception as e:
         db.session.rollback()
@@ -501,6 +506,8 @@ def update_booking_status(booking_id):
                 
         b.status = new_status
         db.session.commit()
+        invalidate_trek_cache(trek_id=trek.id)
+        invalidate_booking_cache(user_id=b.user_id, guide_id=trek.assigned_staff_id)
         
     return jsonify({"message": "Booking status updated successfully"}), 200
 

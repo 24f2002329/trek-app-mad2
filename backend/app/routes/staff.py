@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.booking import Booking
 from app.models.staff_profile import StaffProfile
 from app.utils.decorators import token_required, role_required
+from app.utils.cache import cached, invalidate_trek_cache, invalidate_booking_cache
 import datetime as dt
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/api/staff")
@@ -12,6 +13,7 @@ staff_bp = Blueprint("staff", __name__, url_prefix="/api/staff")
 @staff_bp.route("/dashboard-summary", methods=["GET"])
 @token_required
 @role_required(User.ROLE_STAFF)
+@cached(timeout=300, key_prefix="staff_dashboard", user_specific=True)
 def staff_dashboard_summary():
     staff_id = g.current_user.id
     assigned_treks = Trek.query.filter_by(assigned_staff_id=staff_id).all()
@@ -95,6 +97,8 @@ def update_trek_status(trek_id):
                 b.status = Booking.STATUS_COMPLETED
                 
     db.session.commit()
+    invalidate_trek_cache(trek_id=trek_id)
+    invalidate_booking_cache()
     return jsonify({"message": "Trek status updated successfully"}), 200
 
 @staff_bp.route("/treks/<int:trek_id>/slots", methods=["PUT"])
@@ -120,6 +124,7 @@ def update_trek_slots(trek_id):
         
     t.max_slots = max_slots
     db.session.commit()
+    invalidate_trek_cache(trek_id=trek_id)
     return jsonify({"message": "Trek slots updated successfully", "max_slots": t.max_slots}), 200
 
 @staff_bp.route("/bookings/<int:booking_id>/status", methods=["PUT"])
@@ -152,6 +157,8 @@ def update_staff_booking_status(booking_id):
                 
         b.status = new_status
         db.session.commit()
+        invalidate_trek_cache(trek_id=trek.id)
+        invalidate_booking_cache(user_id=b.user_id, guide_id=g.current_user.id)
         
     return jsonify({"message": "Booking status updated successfully"}), 200
 
@@ -218,6 +225,7 @@ def close_trek_booking(trek_id):
         
     t.booking_close_time = dt.datetime.now(dt.timezone.utc)
     db.session.commit()
+    invalidate_trek_cache(trek_id=trek_id)
     return jsonify({
         "message": "Booking closed successfully",
         "booking_close_time": t.booking_close_time.isoformat()

@@ -11,7 +11,9 @@ def export_user_history_csv(user_id):
     if not u:
         return f"Error: User {user_id} not found."
         
-    bookings = Booking.query.filter_by(user_id=user_id).all()
+    bookings = Booking.query.filter(
+        Booking.user_id == user_id,
+        Booking.status != Booking.STATUS_CANCELLED).all()
     csv_content = generate_bookings_csv(bookings)
     
     # Establish export path

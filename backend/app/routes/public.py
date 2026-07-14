@@ -2,10 +2,12 @@ from flask import Blueprint, request, jsonify
 from app.models.trek import Trek
 from app.models.user import User
 from app.models.booking import Booking
+from app.utils.cache import cached
 
 public_bp = Blueprint("public", __name__, url_prefix="/api/public")
 
 @public_bp.route("/stats", methods=["GET"])
+@cached(timeout=600, key_prefix="public_stats")
 def public_stats():
     total_treks = Trek.query.count()
     total_trekkers = User.query.filter_by(role=User.ROLE_TREKKER).count()
@@ -20,6 +22,7 @@ def public_stats():
     })
 
 @public_bp.route("/treks", methods=["GET"])
+@cached(timeout=300, key_prefix="public_treks")
 def public_treks():
     search = request.args.get("search", "")
     difficulty = request.args.get("difficulty", "")
@@ -84,6 +87,7 @@ def public_treks():
     return jsonify(result)
 
 @public_bp.route("/treks/<int:trek_id>", methods=["GET"])
+@cached(timeout=300, key_prefix="public_trek_detail")
 def public_trek_detail(trek_id):
     t = Trek.query.get_or_404(trek_id)
     import datetime as dt

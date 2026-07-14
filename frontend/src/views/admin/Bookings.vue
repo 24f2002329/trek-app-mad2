@@ -69,7 +69,7 @@
                 </td>
                 <td class="border-secondary border-opacity-10">
                   <div class="text-light fw-bold">{{ b.trek_name }}</div>
-                  <span class="text-secondary small">📍 {{ b.trek_location }}</span>
+                  <span class="text-secondary small"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ b.trek_location }}</span>
                 </td>
                 <td class="border-secondary border-opacity-10 text-center text-secondary">
                   <span class="badge bg-secondary px-2 py-1">{{ b.slots_booked }}</span>
@@ -180,7 +180,7 @@
             <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2">
               <span class="text-secondary small d-block mb-1">Trek</span>
               <span class="text-light fw-bold">{{ detailBooking.trek_name }}</span>
-              <span class="text-secondary small d-block">📍 {{ detailBooking.trek_location }}</span>
+              <span class="text-secondary small d-block"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ detailBooking.trek_location }}</span>
             </div>
             <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2 d-flex justify-content-between align-items-center">
               <span class="text-secondary small">Slots Booked</span>

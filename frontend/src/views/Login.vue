@@ -9,7 +9,7 @@
 
       <!-- Alert -->
       <div v-if="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger small py-2 px-3 mb-4 rounded-3" role="alert">
-        ⚠️ {{ error }}
+        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
       </div>
 
       <!-- Form -->

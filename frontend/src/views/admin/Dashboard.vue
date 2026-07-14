@@ -7,7 +7,7 @@
         <p class="text-secondary mb-0">System administration control panel</p>
       </div>
       <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
-        <span class="badge bg-secondary bg-opacity-25 text-success border border-success border-opacity-20 py-2 px-3">System Online 🟢</span>
+        <span class="badge bg-secondary bg-opacity-25 text-success border border-success border-opacity-20 py-2 px-3"><i class="bi bi-circle-fill text-success me-1" style="font-size: 0.6rem;"></i>System Online</span>
       </div>
     </div>
 

@@ -4,6 +4,7 @@ from app.models.trek import Trek
 from app.models.user import User
 from app.models.booking import Booking
 from app.utils.decorators import token_required, role_required
+from app.utils.cache import cached
 import datetime as dt
 
 user_bp = Blueprint("user", __name__, url_prefix="/api/user")
@@ -11,6 +12,7 @@ user_bp = Blueprint("user", __name__, url_prefix="/api/user")
 @user_bp.route("/dashboard-summary", methods=["GET"])
 @token_required
 @role_required(User.ROLE_TREKKER)
+@cached(timeout=300, key_prefix="user_dashboard", user_specific=True)
 def user_dashboard_summary():
     user_id = g.current_user.id
     bookings = Booking.query.filter_by(user_id=user_id).all()
