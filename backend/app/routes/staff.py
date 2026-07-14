@@ -44,7 +44,7 @@ def staff_dashboard_summary():
             "status": t.status,
             "current_participants": t.current_participants,
             "max_slots": t.max_slots,
-            "booking_close_time": t.booking_close_time.isoformat() if t.booking_close_time else "",
+            "booking_close_time": (t.booking_close_time.isoformat() + "Z") if t.booking_close_time else "",
             "booking_closed": booking_closed
         })
         
@@ -58,7 +58,7 @@ def staff_dashboard_summary():
                     "email": booking.user.email if booking.user else "",
                     "slots": booking.slots_booked,
                     "status": booking.status,
-                    "booking_date": booking.booking_date.isoformat() if booking.booking_date else ""
+                    "booking_date": (booking.booking_date.isoformat() + "Z") if booking.booking_date else ""
                 })
                 
     return jsonify({
@@ -228,5 +228,5 @@ def close_trek_booking(trek_id):
     invalidate_trek_cache(trek_id=trek_id)
     return jsonify({
         "message": "Booking closed successfully",
-        "booking_close_time": t.booking_close_time.isoformat()
+        "booking_close_time": t.booking_close_time.isoformat() + "Z"
     }), 200

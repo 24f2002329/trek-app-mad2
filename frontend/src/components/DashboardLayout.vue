@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-wrapper">
+  <div class="dashboard-wrapper d-flex flex-column flex-md-row">
     <!-- ============ DESKTOP SIDEBAR (md+) ============ -->
     <aside class="sidebar d-none d-md-flex flex-column py-4">
       <div class="sidebar-header px-4 mb-4">
@@ -54,35 +54,24 @@
       </div>
     </aside>
 
-    <!-- ============ MOBILE LAYOUT (< md) ============ -->
-    <div class="d-flex d-md-none flex-column w-100">
+    <!-- ============ MOBILE HEADERNavbar (< md) ============ -->
+    <header class="mobile-topbar d-flex d-md-none align-items-center justify-content-between px-3">
+      <!-- Brand -->
+      <router-link to="/" class="d-flex align-items-center gap-2 text-decoration-none">
+        <img src="../assets/images/logo.png" alt="Logo" style="height: 24px; width: auto;" />
+        <span class="fw-bold text-gradient">TrekSphere</span>
+      </router-link>
 
-      <!-- Mobile Top Navbar -->
-      <header class="mobile-topbar d-flex align-items-center justify-content-between px-3">
-        <!-- Brand -->
-        <router-link to="/" class="d-flex align-items-center gap-2 text-decoration-none">
-          <img src="../assets/images/logo.png" alt="Logo" style="height: 24px; width: auto;" />
-          <span class="fw-bold text-gradient">TrekSphere</span>
-        </router-link>
-
-        <!-- Right: user initial + hamburger -->
-        <div class="d-flex align-items-center gap-2">
-          <div class="avatar-sm bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
-            {{ userInitial }}
-          </div>
-          <button class="hamburger-btn" @click="drawerOpen = true" aria-label="Open menu">
-            <i class="bi bi-list fs-4 text-light"></i>
-          </button>
+      <!-- Right: user initial + hamburger -->
+      <div class="d-flex align-items-center gap-2">
+        <div class="avatar-sm bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
+          {{ userInitial }}
         </div>
-      </header>
-
-      <!-- Mobile Content -->
-      <div class="dashboard-content flex-grow-1">
-        <div class="content-inner p-3 pt-4">
-          <slot></slot>
-        </div>
+        <button class="hamburger-btn" @click="drawerOpen = true" aria-label="Open menu">
+          <i class="bi bi-list fs-4 text-light"></i>
+        </button>
       </div>
-    </div>
+    </header>
 
     <!-- ============ SLIDE-IN DRAWER (mobile) ============ -->
     <Teleport to="body">
@@ -134,9 +123,9 @@
       </transition>
     </Teleport>
 
-    <!-- ============ DESKTOP CONTENT ============ -->
-    <div class="dashboard-content flex-grow-1 d-none d-md-block">
-      <div class="content-inner p-5">
+    <!-- ============ MAIN CONTENT AREA ============ -->
+    <div class="dashboard-content flex-grow-1">
+      <div class="content-inner p-3 p-md-5">
         <slot></slot>
       </div>
     </div>

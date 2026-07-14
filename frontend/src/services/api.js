@@ -205,6 +205,10 @@ export const userService = {
   async getExportStatus(taskId) {
     const response = await api.get(`/api/user/export-status/${taskId}`);
     return response.data;
+  },
+  async payBooking(bookingId) {
+    const response = await api.post(`/api/booking/bookings/${bookingId}/pay`);
+    return response.data;
   }
 };
 

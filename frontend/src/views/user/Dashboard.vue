@@ -95,7 +95,7 @@
                 <tr v-for="b in summary.booking_history" :key="b.booking_id">
                   <td class="border-secondary border-opacity-10">
                     <div class="fw-bold text-secondary">{{ b.trek_name }}</div>
-                    <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ b.location }}</span>
+                    <span class="small text-secondary"><i class="bi bi-geo-alt me-1 text-danger "></i>{{ b.location }}</span>
                   </td>
                   <td class="border-secondary border-opacity-10 text-secondary">{{ b.slots }}</td>
                   <td class="border-secondary border-opacity-10">

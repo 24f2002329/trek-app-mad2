@@ -31,7 +31,7 @@ def admin_dashboard_summary():
             "trek_name": b.trek.name if b.trek else "Unknown",
             "slots_booked": b.slots_booked,
             "status": b.status,
-            "booking_date": b.booking_date.isoformat() if b.booking_date else ""
+            "booking_date": (b.booking_date.isoformat() + "Z") if b.booking_date else ""
         })
         
     return jsonify({
@@ -93,7 +93,7 @@ def get_all_treks():
             "status": t.status,
             "assigned_staff_id": t.assigned_staff_id,
             "assigned_staff_name": t.assigned_staff.name if t.assigned_staff else "Unassigned",
-            "booking_close_time": t.booking_close_time.isoformat() if t.booking_close_time else "",
+            "booking_close_time": (t.booking_close_time.isoformat() + "Z") if t.booking_close_time else "",
             "booking_closed": booking_closed
         })
     return jsonify(result)
@@ -428,7 +428,7 @@ def get_all_users():
             "name": u.name,
             "email": u.email,
             "is_active": u.is_active,
-            "created_at": u.created_at.isoformat() if u.created_at else "",
+            "created_at": (u.created_at.isoformat() + "Z") if u.created_at else "",
             "bookings_count": len(u.bookings)
         })
     return jsonify(result)
@@ -487,7 +487,7 @@ def get_all_bookings():
             "slots_booked": b.slots_booked,
             "status": b.status,
             "payment_status": b.payment_status,
-            "booking_date": b.booking_date.isoformat() if b.booking_date else ""
+            "booking_date": (b.booking_date.isoformat() + "Z") if b.booking_date else ""
         })
     return jsonify(result)
 
@@ -569,11 +569,30 @@ def get_reports_stats():
     total_users = User.query.filter_by(role=User.ROLE_TREKKER).count()
     total_staff = User.query.filter_by(role=User.ROLE_STAFF).count()
     
+    # 6. Booking trends
+    import calendar
+    from sqlalchemy import extract
+    trends_query = db.session.query(
+        extract('year', Booking.booking_date).label('year'),
+        extract('month', Booking.booking_date).label('month'),
+        func.count(Booking.id).label('count')
+    ).filter(Booking.status != Booking.STATUS_CANCELLED).group_by('year', 'month').order_by('year', 'month').limit(6).all()
+    
+    booking_trends = []
+    for year, month, count in trends_query:
+        if year is not None and month is not None:
+            month_name = calendar.month_abbr[int(month)]
+            booking_trends.append({
+                "label": f"{month_name} {int(year)}",
+                "count": count
+            })
+            
     return jsonify({
         "difficulty_distribution": difficulty_dist,
         "trek_status_distribution": status_dist,
         "booking_status_distribution": booking_status_dist,
         "top_treks": top_treks,
+        "booking_trends": booking_trends,
         "metrics": {
             "total_slots_booked": int(total_slots_booked),
             "total_bookings": total_bookings,

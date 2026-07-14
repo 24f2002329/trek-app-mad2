@@ -117,3 +117,22 @@ def cancel_booking(booking_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Error cancelling booking: {str(e)}"}), 500
+
+@booking_bp.route("/bookings/<int:booking_id>/pay", methods=["POST"])
+@token_required
+@role_required(User.ROLE_TREKKER)
+def pay_booking(booking_id):
+    user_id = g.current_user.id
+    booking = Booking.query.filter_by(id=booking_id, user_id=user_id).first_or_404()
+    
+    if booking.status == Booking.STATUS_CANCELLED:
+        return jsonify({"message": "Cannot pay for a cancelled booking"}), 400
+        
+    booking.payment_status = "Paid"
+    try:
+        db.session.commit()
+        invalidate_booking_cache(user_id=user_id, guide_id=booking.trek.assigned_staff_id)
+        return jsonify({"message": "Payment simulation successful. Booking is now Paid!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Error processing payment: {str(e)}"}), 500

@@ -49,6 +49,7 @@
               <th class="text-secondary border-secondary">Reserved On</th>
               <th class="text-secondary border-secondary text-center">Slots Booked</th>
               <th class="text-secondary border-secondary">Status</th>
+              <th class="text-secondary border-secondary">Payment</th>
               <th class="text-secondary border-secondary text-end">Actions</th>
             </tr>
           </thead>
@@ -69,7 +70,24 @@
               <td class="border-secondary border-opacity-10">
                 <span class="badge rounded-pill" :class="getStatusClass(b.status)">{{ b.status }}</span>
               </td>
+              <td class="border-secondary border-opacity-10">
+                <span v-if="b.payment_status === 'Paid'" class="badge rounded-pill bg-success bg-opacity-25 text-success border border-success border-opacity-25">
+                  <i class="bi bi-patch-check-fill me-1"></i>Paid
+                </span>
+                <span v-else class="badge rounded-pill bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25">
+                  <i class="bi bi-hourglass-split me-1"></i>Pending
+                </span>
+              </td>
               <td class="border-secondary border-opacity-10 text-end">
+                <button 
+                  v-if="b.payment_status !== 'Paid'"
+                  @click="payBooking(b)" 
+                  class="btn btn-outline-success btn-sm rounded-3 px-3 py-2 fw-semibold me-2"
+                  :disabled="payingId === b.booking_id"
+                >
+                  <span v-if="payingId === b.booking_id" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  <i class="bi bi-credit-card me-1"></i>Pay Now
+                </button>
                 <button 
                   @click="cancelBooking(b)" 
                   class="btn btn-outline-danger btn-sm rounded-3 px-3 py-2 fw-semibold"
@@ -103,6 +121,7 @@ export default {
       activeBookings: [],
       loading: true,
       cancellingId: null,
+      payingId: null,
       exporting: false
     };
   },
@@ -205,6 +224,27 @@ export default {
           alertService.error(err.response?.data?.message || 'Failed to cancel reservation.');
         } finally {
           this.cancellingId = null;
+        }
+      }
+    },
+    async payBooking(booking) {
+      const msg = `Do you want to simulate a payment charge for "${booking.trek_name}" (slots: ${booking.slots})?`;
+      const confirmed = await confirmService.ask(msg, {
+        title: 'Confirm Payment Simulation',
+        confirmText: 'Pay Now',
+        isDanger: false
+      });
+      
+      if (confirmed) {
+        this.payingId = booking.booking_id;
+        try {
+          await userService.payBooking(booking.booking_id);
+          alertService.success('Payment simulated successfully! Booking status is now Paid.');
+          await this.fetchBookings();
+        } catch (err) {
+          alertService.error(err.response?.data?.message || 'Failed to simulate payment.');
+        } finally {
+          this.payingId = null;
         }
       }
     }
