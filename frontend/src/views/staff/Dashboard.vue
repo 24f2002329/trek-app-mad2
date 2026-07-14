@@ -4,14 +4,14 @@
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">Staff <span class="text-gradient">Operations Center</span></h1>
-        <p class="text-secondary mb-0">View assigned trekking expeditions, update real-time trek statuses, and monitor registered participants.</p>
+        <p class="text-secondary mb-0">View assigned treks, update real-time trek statuses, and monitor registered participants.</p>
       </div>
     </div>
 
     <!-- Active Today Banner -->
     <div class="mb-5" v-if="summary.today_treks.length > 0">
       <h4 class="h5 fw-bold text-gradient mb-3">
-        <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Active Expeditions Today
+        <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Active Treks Today
       </h4>
       <div class="row g-3">
         <div class="col-md-6" v-for="t in summary.today_treks" :key="t.id">
@@ -58,7 +58,7 @@
       <div class="col-lg-7">
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100">
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="h5 fw-bold mb-0 text-light">Assigned Expeditions</h4>
+            <h4 class="h5 fw-bold mb-0 text-light">Assigned Treks</h4>
             <router-link to="/staff/treks" class="btn btn-outline-info btn-sm rounded-3 px-3">View All</router-link>
           </div>
 

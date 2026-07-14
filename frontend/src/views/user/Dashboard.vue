@@ -7,7 +7,7 @@
         <p class="text-secondary mb-0">Ready for your next adventure?</p>
       </div>
       <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
-        <router-link to="/treks" class="btn btn-glow px-4 py-2">Explore More Treks</router-link>
+        <router-link to="/browse-treks" class="btn btn-glow px-4 py-2">Explore More Treks</router-link>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
           <div v-else-if="summary.my_bookings.length === 0" class="text-center py-5">
             <span class="display-3 mb-2 d-block text-secondary"><i class="bi bi-calendar-x"></i></span>
             <p class="text-secondary">You haven't booked any treks yet.</p>
-            <router-link to="/treks" class="btn btn-outline-secondary border-secondary text-light btn-sm px-3 rounded-3">Find a Trek</router-link>
+            <router-link to="/browse-treks" class="btn btn-outline-secondary border-secondary text-light btn-sm px-3 rounded-3">Find a Trek</router-link>
           </div>
 
           <div v-else class="table-responsive">
@@ -72,7 +72,7 @@
 
         <!-- Booking History Card -->
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 mt-4">
-          <h4 class="h5 fw-bold mb-4 text-light">Expedition History</h4>
+          <h4 class="h5 fw-bold mb-4 text-light">Trek History</h4>
 
           <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-info" role="status"></div>
@@ -129,7 +129,7 @@
               
               <div class="d-flex justify-content-between align-items-center">
                 <span class="small text-info">{{ trek.slots_left }} spots left</span>
-                <router-link :to="`/treks?id=${trek.id}`" class="btn btn-glow btn-sm py-1 px-3">Book Now</router-link>
+                <router-link :to="`/browse-treks?id=${trek.id}`" class="btn btn-glow btn-sm py-1 px-3">Book Now</router-link>
               </div>
             </div>
           </div>

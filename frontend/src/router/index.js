@@ -1,108 +1,117 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from '../views/Home.vue';
-import Treks from '../views/Treks.vue';
-import Login from '../views/Login.vue';
-import Register from '../views/Register.vue';
-import AdminDashboard from '../views/admin/Dashboard.vue';
-import AdminTreks from '../views/admin/Treks.vue';
-import AdminStaff from '../views/admin/Staff.vue';
-import AdminUsers from '../views/admin/Users.vue';
-import AdminBookings from '../views/admin/Bookings.vue';
-import AdminReports from '../views/admin/Reports.vue';
-import StaffDashboard from '../views/staff/Dashboard.vue';
-import StaffTreks from '../views/staff/MyTreks.vue';
-import StaffParticipants from '../views/staff/Participants.vue';
-import StaffProfile from '../views/staff/Profile.vue';
-import UserDashboard from '../views/user/Dashboard.vue';
 import { authService } from '../services/api';
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: () => import('../views/Home.vue')
   },
   {
     path: '/treks',
     name: 'Treks',
-    component: Treks
+    component: () => import('../views/Treks.vue')
   },
   {
     path: '/login',
     name: 'Login',
-    component: Login,
+    component: () => import('../views/Login.vue'),
     meta: { guestOnly: true }
   },
   {
     path: '/register',
     name: 'Register',
-    component: Register,
+    component: () => import('../views/Register.vue'),
     meta: { guestOnly: true }
   },
   {
     path: '/dashboard',
     name: 'UserDashboard',
-    component: UserDashboard,
+    component: () => import('../views/user/Dashboard.vue'),
+    meta: { requiresAuth: true, role: 'trekker' }
+  },
+  {
+    path: '/browse-treks',
+    name: 'UserBrowseTreks',
+    component: () => import('../views/user/BrowseTreks.vue'),
+    meta: { requiresAuth: true, role: 'trekker' }
+  },
+  {
+    path: '/my-bookings',
+    name: 'UserBookings',
+    component: () => import('../views/user/Bookings.vue'),
+    meta: { requiresAuth: true, role: 'trekker' }
+  },
+  {
+    path: '/history',
+    name: 'UserHistory',
+    component: () => import('../views/user/History.vue'),
+    meta: { requiresAuth: true, role: 'trekker' }
+  },
+  {
+    path: '/profile',
+    name: 'UserProfile',
+    component: () => import('../views/user/Profile.vue'),
     meta: { requiresAuth: true, role: 'trekker' }
   },
   {
     path: '/admin/dashboard',
     name: 'AdminDashboard',
-    component: AdminDashboard,
+    component: () => import('../views/admin/Dashboard.vue'),
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
     path: '/admin/treks',
     name: 'AdminTreks',
-    component: AdminTreks,
+    component: () => import('../views/admin/Treks.vue'),
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
     path: '/admin/staff',
     name: 'AdminStaff',
-    component: AdminStaff,
+    component: () => import('../views/admin/Staff.vue'),
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
     path: '/admin/users',
     name: 'AdminUsers',
-    component: AdminUsers,
+    component: () => import('../views/admin/Users.vue'),
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
     path: '/admin/bookings',
     name: 'AdminBookings',
-    component: AdminBookings,
+    component: () => import('../views/admin/Bookings.vue'),
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
     path: '/admin/reports',
     name: 'AdminReports',
-    component: AdminReports,
+    component: () => import('../views/admin/Reports.vue'),
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
     path: '/staff/dashboard',
     name: 'StaffDashboard',
-    component: StaffDashboard,
+    component: () => import('../views/staff/Dashboard.vue'),
     meta: { requiresAuth: true, role: 'trek_staff' }
   },
   {
     path: '/staff/treks',
     name: 'StaffTreks',
-    component: StaffTreks,
+    component: () => import('../views/staff/MyTreks.vue'),
     meta: { requiresAuth: true, role: 'trek_staff' }
   },
   {
     path: '/staff/participants',
     name: 'StaffParticipants',
-    component: StaffParticipants,
+    component: () => import('../views/staff/Participants.vue'),
     meta: { requiresAuth: true, role: 'trek_staff' }
   },
   {
     path: '/staff/profile',
     name: 'StaffProfile',
-    component: StaffProfile,
+    component: () => import('../views/staff/Profile.vue'),
     meta: { requiresAuth: true, role: 'trek_staff' }
   },
 
@@ -123,8 +132,8 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = authService.isAuthenticated();
   const currentUser = authService.getCurrentUser();
 
-  // If page is for guests only (e.g. login/register) but user is authenticated, redirect to appropriate dashboard
-  if (to.meta.guestOnly && isAuthenticated && currentUser) {
+  // If user is authenticated and attempts to access the home page '/' or guest-only pages (e.g. login/register), redirect to appropriate dashboard
+  if ((to.path === '/' || to.meta.guestOnly) && isAuthenticated && currentUser) {
     if (currentUser.role === 'admin') {
       return next('/admin/dashboard');
     } else if (currentUser.role === 'trek_staff') {

@@ -66,7 +66,7 @@
       <div v-if="activeTreks.length > 0" class="section-group">
         <h4 class="h5 fw-bold text-gradient-info mb-4 d-flex align-items-center gap-2">
           <span class="status-dot bg-info"></span>
-          Active / Ongoing Expeditions ({{ activeTreks.length }})
+          Active / Ongoing Treks ({{ activeTreks.length }})
         </h4>
         <div class="row g-4">
           <div class="col-md-6 col-lg-4" v-for="trek in activeTreks" :key="trek.id">
@@ -384,8 +384,8 @@
                   <input v-model="form.end_date" type="date" class="form-control bg-black bg-opacity-25 border-secondary text-light" :min="form.start_date" required />
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label text-secondary small">Booking Close Deadline</label>
-                  <input v-model="form.booking_close_time" type="datetime-local" class="form-control bg-black bg-opacity-25 border-secondary text-light" />
+                  <label class="form-label text-secondary small">Booking Close Deadline *</label>
+                  <input v-model="form.booking_close_time" type="datetime-local" class="form-control bg-black bg-opacity-25 border-secondary text-light" required />
                 </div>
                 <div class="col-md-6">
                   <label class="form-label text-secondary small">Assign Staff Guide</label>
@@ -594,6 +594,10 @@ export default {
       this.modalInstance.show();
     },
     async saveTrek() {
+      if (!this.form.booking_close_time) {
+        alertService.error('Booking close deadline is required.');
+        return;
+      }
       this.submitting = true;
       try {
         if (this.isEdit) {

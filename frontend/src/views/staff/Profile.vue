@@ -61,7 +61,7 @@
 
               <div class="col-12">
                 <label class="form-label text-secondary small">Short Professional Bio</label>
-                <textarea v-model="profile.bio" rows="4" class="form-control bg-black bg-opacity-25 border-secondary text-light py-2 px-3" placeholder="Describe your expedition leadership style, mountains climbed, and safety record..."></textarea>
+                <textarea v-model="profile.bio" rows="4" class="form-control bg-black bg-opacity-25 border-secondary text-light py-2 px-3" placeholder="Describe your trek leadership style, mountains climbed, and safety record..."></textarea>
               </div>
             </div>
 

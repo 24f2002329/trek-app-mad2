@@ -36,8 +36,7 @@ export default {
   },
   computed: {
     isDashboardRoute() {
-      const path = this.$route?.path || '';
-      return path.startsWith('/admin') || path.startsWith('/staff') || path === '/dashboard';
+      return this.$route?.meta?.requiresAuth === true;
     }
   }
 }

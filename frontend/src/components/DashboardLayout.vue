@@ -196,7 +196,10 @@ export default {
       }
       return [
         { path: '/dashboard', label: 'Dashboard',  icon: 'bi-grid-1x2-fill' },
-        { path: '/treks',     label: 'Find Treks', icon: 'bi-compass' }
+        { path: '/browse-treks', label: 'Browse Treks', icon: 'bi-compass' },
+        { path: '/my-bookings', label: 'My Bookings', icon: 'bi-calendar-check' },
+        { path: '/history', label: 'History', icon: 'bi-clock-history' },
+        { path: '/profile', label: 'Profile', icon: 'bi-person-circle' }
       ];
     }
   },

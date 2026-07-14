@@ -24,6 +24,7 @@ def public_treks():
     search = request.args.get("search", "")
     difficulty = request.args.get("difficulty", "")
     location = request.args.get("location", "")
+    duration = request.args.get("duration", "")
     
     query = Trek.query.filter(Trek.status.in_(["Open", "Approved", "Active", "Pending"]))
     
@@ -38,6 +39,18 @@ def public_treks():
         query = query.filter(Trek.difficulty.ilike(difficulty))
     if location:
         query = query.filter(Trek.location.ilike(f"%{location}%"))
+    if duration:
+        if duration.lower() == "short":
+            query = query.filter(Trek.duration <= 3)
+        elif duration.lower() == "medium":
+            query = query.filter(Trek.duration >= 4, Trek.duration <= 7)
+        elif duration.lower() == "long":
+            query = query.filter(Trek.duration >= 8)
+        else:
+            try:
+                query = query.filter_by(duration=int(duration))
+            except ValueError:
+                pass
         
     treks = query.all()
     

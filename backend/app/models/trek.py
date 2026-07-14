@@ -17,7 +17,7 @@ class Trek(db.Model):
     end_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), default="Pending")
     assigned_staff_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    booking_close_time = db.Column(db.DateTime, nullable=True)
+    booking_close_time = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

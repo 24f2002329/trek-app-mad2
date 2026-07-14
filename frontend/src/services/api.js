@@ -185,6 +185,18 @@ export const userService = {
   async createBooking(trekId, slots = 1) {
     const response = await api.post('/api/booking/bookings', { trek_id: trekId, slots });
     return response.data;
+  },
+  async getProfile() {
+    const response = await api.get('/api/user/profile');
+    return response.data;
+  },
+  async updateProfile(data) {
+    const response = await api.put('/api/user/profile', data);
+    return response.data;
+  },
+  async cancelBooking(bookingId) {
+    const response = await api.post(`/api/booking/bookings/${bookingId}/cancel`);
+    return response.data;
   }
 };
 

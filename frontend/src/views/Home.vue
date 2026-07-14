@@ -69,7 +69,7 @@
       <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
         <div>
           <h2 class="display-5 fw-bold mb-1">Featured <span class="text-gradient">Treks</span></h2>
-          <p class="text-secondary mb-0">Get ready for upcoming open group expeditions</p>
+          <p class="text-secondary mb-0">Get ready for upcoming open group treks</p>
         </div>
         <div class="mt-3 mt-md-0">
           <router-link to="/treks" class="btn btn-outline-secondary border-secondary text-light px-4 py-2 rounded-pill">

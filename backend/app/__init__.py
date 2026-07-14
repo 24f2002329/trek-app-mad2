@@ -51,7 +51,6 @@ def create_app(config_class=Config):
                 profile = StaffProfile(
                     user_id=staff.id,
                     contact="9876543210",
-                    status="Approved",
                     experience_years=5,
                     skills="First Aid, Rock Climbing, Navigation",
                     bio="Experienced guide who loves high-altitude peak climbs."

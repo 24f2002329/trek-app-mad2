@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, g
+from flask import Blueprint, request, jsonify, g
+from app.extensions import db
 from app.models.trek import Trek
 from app.models.user import User
 from app.models.booking import Booking
@@ -67,3 +68,39 @@ def user_dashboard_summary():
         "booking_history": booking_history,
         "recommended_treks": recommended_list
     })
+
+@user_bp.route("/profile", methods=["GET"])
+@token_required
+@role_required(User.ROLE_TREKKER)
+def get_user_profile():
+    user = g.current_user
+    return jsonify({
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "is_active": user.is_active
+    }), 200
+
+@user_bp.route("/profile", methods=["PUT"])
+@token_required
+@role_required(User.ROLE_TREKKER)
+def update_user_profile():
+    user = g.current_user
+    data = request.get_json() or {}
+    
+    name = data.get("name")
+    password = data.get("password")
+    
+    if name:
+        user.name = name
+    if password:
+        if len(password) < 8:
+            return jsonify({"message": "Password must be at least 8 characters long"}), 400
+        user.set_password(password)
+        
+    try:
+        db.session.commit()
+        return jsonify({"message": "Profile updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Database error: {str(e)}"}), 500

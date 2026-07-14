@@ -126,20 +126,21 @@ def create_trek():
     if duration <= 0:
         return jsonify({"message": "End date must be on or after start date"}), 400
         
-    booking_close_time = None
     booking_close_time_str = data.get("booking_close_time")
-    if booking_close_time_str:
-        try:
-            clean_str = booking_close_time_str.split(".")[0].replace("Z", "")
-            if "T" in clean_str:
-                if len(clean_str.split("T")[1].split(":")) == 2:
-                    booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M")
-                else:
-                    booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+    if not booking_close_time_str:
+        return jsonify({"message": "Booking close deadline is required"}), 400
+        
+    try:
+        clean_str = booking_close_time_str.split(".")[0].replace("Z", "")
+        if "T" in clean_str:
+            if len(clean_str.split("T")[1].split(":")) == 2:
+                booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M")
             else:
-                booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%d")
-        except ValueError:
-            return jsonify({"message": "Invalid booking_close_time format"}), 400
+                booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+        else:
+            booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"message": "Invalid booking close deadline format"}), 400
             
     assigned_staff_id = data.get("assigned_staff_id")
     if assigned_staff_id:
@@ -205,19 +206,18 @@ def update_trek(trek_id):
     if "booking_close_time" in data:
         booking_close_time_str = data["booking_close_time"]
         if not booking_close_time_str:
-            t.booking_close_time = None
-        else:
-            try:
-                clean_str = booking_close_time_str.split(".")[0].replace("Z", "")
-                if "T" in clean_str:
-                    if len(clean_str.split("T")[1].split(":")) == 2:
-                        t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M")
-                    else:
-                        t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+            return jsonify({"message": "Booking close deadline is required"}), 400
+        try:
+            clean_str = booking_close_time_str.split(".")[0].replace("Z", "")
+            if "T" in clean_str:
+                if len(clean_str.split("T")[1].split(":")) == 2:
+                    t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M")
                 else:
-                    t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%d")
-            except ValueError:
-                return jsonify({"message": "Invalid booking_close_time format"}), 400
+                    t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+            else:
+                t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"message": "Invalid booking close deadline format"}), 400
                 
     if "assigned_staff_id" in data:
         staff_id = data["assigned_staff_id"]

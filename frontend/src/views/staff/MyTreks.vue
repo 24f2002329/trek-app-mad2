@@ -24,7 +24,7 @@
       <div v-if="activeTreks.length > 0" class="section-group">
         <h4 class="h5 fw-bold text-gradient-info mb-4 d-flex align-items-center gap-2">
           <span class="status-dot bg-info"></span>
-          Active / Ongoing Expeditions ({{ activeTreks.length }})
+          Active / Ongoing Treks ({{ activeTreks.length }})
         </h4>
         <div class="row g-4">
           <div class="col-md-6 col-xl-4" v-for="trek in activeTreks" :key="trek.id">

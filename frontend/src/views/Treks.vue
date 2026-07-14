@@ -40,7 +40,10 @@
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 h-100 overflow-hidden d-flex flex-column" :class="{ 'border-info': selectedTrekId === trek.id }">
           <div class="p-4 flex-grow-1">
             <div class="d-flex justify-content-between align-items-start mb-3">
-              <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-3 py-2 rounded-pill">{{ getDifficultyStars(trek.difficulty) }} {{ trek.difficulty }}</span>
+              <div>
+                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-3 py-2 rounded-pill">{{ getDifficultyStars(trek.difficulty) }} {{ trek.difficulty }}</span>
+                <span v-if="isLoggedIn && isTrekker && bookedTrekIds.includes(trek.id)" class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 rounded-pill ms-2">Already Booked</span>
+              </div>
               <span class="text-secondary small">⏳ {{ trek.duration }} Days</span>
             </div>
             <h3 class="h4 fw-bold text-light mb-2">{{ trek.name }}</h3>
@@ -79,7 +82,8 @@
           </div>
           <div class="p-4 border-top border-secondary border-opacity-10 bg-black bg-opacity-10 d-flex gap-2">
             <button @click="showDetails(trek)" class="btn btn-outline-secondary border-secondary text-light flex-grow-1 py-2 rounded-3">View Details</button>
-            <button @click="bookNow(trek)" class="btn btn-glow px-4 py-2">Book Now</button>
+            <button v-if="isLoggedIn && isTrekker && bookedTrekIds.includes(trek.id)" class="btn btn-secondary px-4 py-2 cursor-not-allowed" disabled>Booked</button>
+            <button v-else @click="bookNow(trek)" class="btn btn-glow px-4 py-2">Book Now</button>
           </div>
         </div>
       </div>
@@ -114,7 +118,7 @@
                     <span class="fs-4 text-info"><i class="bi bi-hourglass-split"></i></span>
                     <div>
                       <strong class="d-block text-light">Duration</strong>
-                      <span class="text-secondary small">{{ activeTrek.duration }} Days of guided expedition</span>
+                      <span class="text-secondary small">{{ activeTrek.duration }} Days of guided trek</span>
                     </div>
                   </div>
                   <div class="d-flex align-items-center gap-3">
@@ -154,16 +158,13 @@
 
                   <!-- Booking Widget Inside Details -->
                   <div v-if="isTrekker">
-                    <h6 class="fw-bold mb-2 text-light" v-if="!activeTrek.booking_closed">Book Slots</h6>
-                    <div class="input-group mb-3" v-if="!activeTrek.booking_closed">
-                      <button class="btn btn-outline-secondary border-secondary text-light px-2 py-1" type="button" @click="bookingSlots = Math.max(1, bookingSlots - 1)">-</button>
-                      <input type="number" v-model.number="bookingSlots" class="form-control bg-dark text-light border-secondary text-center" min="1" :max="activeTrek.slots_left" />
-                      <button class="btn btn-outline-secondary border-secondary text-light px-2 py-1" type="button" @click="bookingSlots = Math.min(activeTrek.slots_left, bookingSlots + 1)">+</button>
-                    </div>
-                    <button @click="confirmBooking" class="btn btn-glow w-100 py-2 rounded-3" :disabled="activeTrek.slots_left <= 0 || activeTrek.booking_closed">
+                    <button v-if="bookedTrekIds.includes(activeTrek.id)" class="btn btn-secondary w-100 py-2 rounded-3 mt-3 cursor-not-allowed" disabled>
+                      <i class="bi bi-check-circle-fill me-2"></i>Already Booked
+                    </button>
+                    <button v-else @click="confirmBooking" class="btn btn-glow w-100 py-2 rounded-3 mt-3" :disabled="activeTrek.slots_left <= 0 || activeTrek.booking_closed">
                       <span v-if="activeTrek.booking_closed">Booking Closed</span>
                       <span v-else-if="activeTrek.slots_left <= 0">Fully Booked</span>
-                      <span v-else>Confirm Booking</span>
+                      <span v-else>Book Trek</span>
                     </button>
                   </div>
                   <div v-else-if="!isLoggedIn">
@@ -215,7 +216,8 @@ export default {
       bookingSlots: 1,
       isLoggedIn: false,
       isTrekker: false,
-      successMessage: ''
+      successMessage: '',
+      bookedTrekIds: []
     };
   },
   methods: {
@@ -259,6 +261,16 @@ export default {
           difficulty: this.filters.difficulty
         });
         this.treks = treksList;
+        
+        // Also fetch user's active bookings if the user is a logged-in trekker
+        if (this.isLoggedIn && this.isTrekker) {
+          try {
+            const summary = await userService.getDashboardSummary();
+            this.bookedTrekIds = summary.my_bookings.map(b => b.trek_id);
+          } catch (e) {
+            console.warn('Failed to load user bookings summary', e);
+          }
+        }
         
         // If route query contains trek id, auto-open details
         const queryTrekId = this.$route.query.id;

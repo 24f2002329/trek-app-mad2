@@ -54,7 +54,7 @@
               <tr>
                 <th class="text-secondary border-secondary">Booking ID</th>
                 <th class="text-secondary border-secondary">Trekker</th>
-                <th class="text-secondary border-secondary">Expedition Trek</th>
+                <th class="text-secondary border-secondary">Trek</th>
                 <th class="text-secondary border-secondary text-center">Slots Booked</th>
                 <th class="text-secondary border-secondary">Booking Date</th>
                 <th class="text-secondary border-secondary text-center">Status</th>
