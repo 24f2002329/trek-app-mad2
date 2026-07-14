@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-5">
+  <DashboardLayout role="admin">
     <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-md-6 text-center text-md-start">
@@ -16,7 +16,7 @@
     <div class="row g-4 mb-5">
       <!-- Total Treks -->
       <div class="col-6 col-md-3">
-        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3">
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3 h-100">
           <div class="d-flex align-items-center gap-3">
             <div class="fs-2 text-info"><i class="bi bi-compass"></i></div>
             <div>
@@ -28,7 +28,7 @@
       </div>
       <!-- Total Users -->
       <div class="col-6 col-md-3">
-        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3">
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3 h-100">
           <div class="d-flex align-items-center gap-3">
             <div class="fs-2 text-primary"><i class="bi bi-people"></i></div>
             <div>
@@ -40,7 +40,7 @@
       </div>
       <!-- Total Bookings -->
       <div class="col-6 col-md-3">
-        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3">
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3 h-100">
           <div class="d-flex align-items-center gap-3">
             <div class="fs-2 text-success"><i class="bi bi-calendar-check"></i></div>
             <div>
@@ -52,7 +52,7 @@
       </div>
       <!-- Total Staff -->
       <div class="col-6 col-md-3">
-        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3">
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-3 h-100">
           <div class="d-flex align-items-center gap-3">
             <div class="fs-2 text-warning"><i class="bi bi-map"></i></div>
             <div>
@@ -70,7 +70,7 @@
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="h5 fw-bold mb-0 text-light">Recent Bookings</h4>
-            <span class="text-secondary small">Live logs</span>
+            <router-link to="/admin/bookings" class="btn btn-outline-info btn-sm rounded-pill px-3">View All</router-link>
           </div>
 
           <div v-if="loading" class="text-center py-5">
@@ -119,34 +119,38 @@
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100">
           <h4 class="h5 fw-bold mb-4 text-light">Quick Actions</h4>
           <div class="d-flex flex-column gap-3">
-            <button @click="showActionNotice('Create New Trek')" class="btn btn-glow text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3">
+            <router-link to="/admin/treks?create=true" class="btn btn-glow text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3 text-decoration-none">
               <span><i class="bi bi-plus-circle-fill me-2"></i> Create New Trek</span>
               <span><i class="bi bi-arrow-right"></i></span>
-            </button>
-            <button @click="showActionNotice('Add New Staff Member')" class="btn btn-outline-secondary border-secondary text-light text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3">
+            </router-link>
+            <router-link to="/admin/staff?create=true" class="btn btn-outline-secondary border-secondary text-light text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3 text-decoration-none">
               <span><i class="bi bi-person-plus-fill me-2"></i> Register Trek Leader</span>
               <span><i class="bi bi-arrow-right"></i></span>
-            </button>
-            <button @click="showActionNotice('View All Users')" class="btn btn-outline-secondary border-secondary text-light text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3">
+            </router-link>
+            <router-link to="/admin/users" class="btn btn-outline-secondary border-secondary text-light text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3 text-decoration-none">
               <span><i class="bi bi-people-fill me-2"></i> Manage Trekkers</span>
               <span><i class="bi bi-arrow-right"></i></span>
-            </button>
-            <button @click="showActionNotice('View Booking Reports')" class="btn btn-outline-secondary border-secondary text-light text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3">
-              <span><i class="bi bi-bar-chart-line-fill me-2"></i> Export Reports</span>
+            </router-link>
+            <router-link to="/admin/reports" class="btn btn-outline-secondary border-secondary text-light text-start py-3 px-4 d-flex justify-content-between align-items-center rounded-3 text-decoration-none">
+              <span><i class="bi bi-bar-chart-line-fill me-2"></i> View Analytics</span>
               <span><i class="bi bi-arrow-right"></i></span>
-            </button>
+            </router-link>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </DashboardLayout>
 </template>
 
 <script>
 import { adminService } from '../../services/api';
+import DashboardLayout from '../../components/DashboardLayout.vue';
 
 export default {
   name: 'AdminDashboard',
+  components: {
+    DashboardLayout
+  },
   data() {
     return {
       summary: {
@@ -176,9 +180,6 @@ export default {
         case 'Cancelled': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';
       }
-    },
-    showActionNotice(actionName) {
-      alert(`[Mock Action] '${actionName}' would open a management panel. The backend data interfaces are fully wired.`);
     }
   },
   async mounted() {

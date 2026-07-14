@@ -4,6 +4,11 @@ import Treks from '../views/Treks.vue';
 import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
 import AdminDashboard from '../views/admin/Dashboard.vue';
+import AdminTreks from '../views/admin/Treks.vue';
+import AdminStaff from '../views/admin/Staff.vue';
+import AdminUsers from '../views/admin/Users.vue';
+import AdminBookings from '../views/admin/Bookings.vue';
+import AdminReports from '../views/admin/Reports.vue';
 import StaffDashboard from '../views/staff/Dashboard.vue';
 import UserDashboard from '../views/user/Dashboard.vue';
 import { authService } from '../services/api';
@@ -44,11 +49,42 @@ const routes = [
     meta: { requiresAuth: true, role: 'admin' }
   },
   {
+    path: '/admin/treks',
+    name: 'AdminTreks',
+    component: AdminTreks,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/staff',
+    name: 'AdminStaff',
+    component: AdminStaff,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/users',
+    name: 'AdminUsers',
+    component: AdminUsers,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/bookings',
+    name: 'AdminBookings',
+    component: AdminBookings,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/reports',
+    name: 'AdminReports',
+    component: AdminReports,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
     path: '/staff/dashboard',
     name: 'StaffDashboard',
     component: StaffDashboard,
     meta: { requiresAuth: true, role: 'trek_staff' }
   },
+
   // Fallback redirect
   {
     path: '/:pathMatch(.*)*',

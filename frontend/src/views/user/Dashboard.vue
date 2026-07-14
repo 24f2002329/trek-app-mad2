@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-5">
+  <DashboardLayout role="user">
     <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-md-6 text-center text-md-start">
@@ -136,14 +136,18 @@
         </div>
       </div>
     </div>
-  </div>
+  </DashboardLayout>
 </template>
 
 <script>
 import { userService, authService } from '../../services/api';
+import DashboardLayout from '../../components/DashboardLayout.vue';
 
 export default {
   name: 'UserDashboard',
+  components: {
+    DashboardLayout
+  },
   data() {
     return {
       userName: '',

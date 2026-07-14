@@ -1,6 +1,8 @@
 <template>
   <div id="app" class="d-flex flex-column min-vh-100 bg-dark text-light position-relative">
-    <Navbar />
+    <!-- Show Navbar only on non-dashboard routes -->
+    <Navbar v-if="!isDashboardRoute" />
+    
     <main class="flex-grow-1 position-relative z-1">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -8,7 +10,9 @@
         </transition>
       </router-view>
     </main>
-    <footer class="py-4 text-center border-top border-secondary border-opacity-20 text-secondary z-1 mt-auto">
+
+    <!-- Show footer only on non-dashboard routes -->
+    <footer v-if="!isDashboardRoute" class="py-4 text-center border-top border-secondary border-opacity-20 text-secondary z-1 mt-auto">
       <div class="container">
         <small>&copy; 2026 Trekking Management Application V2. All rights reserved  <br> Made with ❤️ by Devendra.</small>
       </div>
@@ -23,6 +27,12 @@ export default {
   name: 'App',
   components: {
     Navbar
+  },
+  computed: {
+    isDashboardRoute() {
+      const path = this.$route?.path || '';
+      return path.startsWith('/admin') || path.startsWith('/staff') || path === '/dashboard';
+    }
   }
 }
 </script>

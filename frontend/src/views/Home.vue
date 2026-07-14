@@ -144,7 +144,7 @@
           <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100 text-center">
             <div class="fs-1 mb-3 text-info"><i class="bi bi-check-circle-fill"></i></div>
             <h4 class="h5 fw-bold mb-2 text-light">Beautiful Destinations</h4>
-            <p class="text-secondary mb-0 small">Handpicked scenic routes that display the best vistas in the mountains.</p>
+            <p class="text-secondary mb-0 small">Handpicked scenic treks that display the best vistas in the mountains.</p>
           </div>
         </div>
         <!-- Item 4 -->
@@ -202,7 +202,7 @@
         <div class="row g-4 mb-4 text-start">
           <div class="col-md-6">
             <h5 class="text-light fw-bold mb-3"><img src="../assets/images/logo.png" alt="Logo" class="me-2" style="height: 24px; width: auto;" /> TrekSphere</h5>
-            <p class="small text-secondary" style="max-width: 320px;">Empowering adventure seekers to discover and book remote wilderness routes safely.</p>
+            <p class="small text-secondary" style="max-width: 320px;">Empowering adventure seekers to discover and book remote wilderness treks safely.</p>
           </div>
           <div class="col-md-3">
             <h6 class="text-light fw-bold mb-3">Company</h6>

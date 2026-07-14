@@ -86,8 +86,61 @@ export const adminService = {
   async getDashboardSummary() {
     const response = await api.get('/api/admin/dashboard-summary');
     return response.data;
+  },
+  async getTreks(params) {
+    const response = await api.get('/api/admin/treks', { params });
+    return response.data;
+  },
+  async createTrek(data) {
+    const response = await api.post('/api/admin/treks', data);
+    return response.data;
+  },
+  async updateTrek(id, data) {
+    const response = await api.put(`/api/admin/treks/${id}`, data);
+    return response.data;
+  },
+  async deleteTrek(id) {
+    const response = await api.delete(`/api/admin/treks/${id}`);
+    return response.data;
+  },
+  async getStaff(params) {
+    const response = await api.get('/api/admin/staff', { params });
+    return response.data;
+  },
+  async createStaff(data) {
+    const response = await api.post('/api/admin/staff', data);
+    return response.data;
+  },
+  async updateStaff(id, data) {
+    const response = await api.put(`/api/admin/staff/${id}`, data);
+    return response.data;
+  },
+  async toggleStaffStatus(id, isActive) {
+    const response = await api.put(`/api/admin/staff/${id}/status`, { is_active: isActive });
+    return response.data;
+  },
+  async getUsers(params) {
+    const response = await api.get('/api/admin/users', { params });
+    return response.data;
+  },
+  async toggleUserStatus(id, isActive) {
+    const response = await api.put(`/api/admin/users/${id}/status`, { is_active: isActive });
+    return response.data;
+  },
+  async getBookings(params) {
+    const response = await api.get('/api/admin/bookings', { params });
+    return response.data;
+  },
+  async updateBookingStatus(id, status) {
+    const response = await api.put(`/api/admin/bookings/${id}/status`, { status });
+    return response.data;
+  },
+  async getReportStats() {
+    const response = await api.get('/api/admin/reports/stats');
+    return response.data;
   }
 };
+
 
 export const staffService = {
   async getDashboardSummary() {
