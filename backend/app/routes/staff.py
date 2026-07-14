@@ -24,16 +24,13 @@ def staff_dashboard_summary():
     
     for t in assigned_treks:
         booking_closed = False
-        if t.status not in ["Open", "Approved"]:
+        if t.status != "Open":
             booking_closed = True
         elif t.booking_close_time:
             close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
             if dt.datetime.now(dt.timezone.utc) > close_time:
                 booking_closed = True
 
-        latest_booking = Booking.query.filter_by(trek_id=t.id).filter(Booking.status != Booking.STATUS_CANCELLED).order_by(Booking.booking_date.desc()).first()
-        last_booking_time = latest_booking.booking_date.isoformat() if latest_booking else ""
-        
         treks_list.append({
             "id": t.id,
             "name": t.name,
@@ -45,7 +42,6 @@ def staff_dashboard_summary():
             "status": t.status,
             "current_participants": t.current_participants,
             "max_slots": t.max_slots,
-            "last_booking_time": last_booking_time,
             "booking_close_time": t.booking_close_time.isoformat() if t.booking_close_time else "",
             "booking_closed": booking_closed
         })
@@ -87,7 +83,17 @@ def update_trek_status(trek_id):
     if not new_status:
         return jsonify({"message": "Status is required"}), 400
         
+    if new_status not in ["Pending", "Approved", "Open", "Closed", "Completed"]:
+        return jsonify({"message": f"Invalid trek status: {new_status}"}), 400
+        
     t.status = new_status
+    if new_status == "Open":
+        t.booking_close_time = None
+    elif new_status == "Completed":
+        for b in t.bookings:
+            if b.status == Booking.STATUS_BOOKED:
+                b.status = Booking.STATUS_COMPLETED
+                
     db.session.commit()
     return jsonify({"message": "Trek status updated successfully"}), 200
 

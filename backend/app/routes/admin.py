@@ -69,16 +69,13 @@ def get_all_treks():
     result = []
     for t in treks:
         booking_closed = False
-        if t.status not in ["Open", "Approved"]:
+        if t.status != "Open":
             booking_closed = True
         elif t.booking_close_time:
             close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
             if dt.datetime.now(dt.timezone.utc) > close_time:
                 booking_closed = True
 
-        latest_booking = Booking.query.filter_by(trek_id=t.id).filter(Booking.status != Booking.STATUS_CANCELLED).order_by(Booking.booking_date.desc()).first()
-        last_booking_time = latest_booking.booking_date.isoformat() if latest_booking else ""
-        
         result.append({
             "id": t.id,
             "name": t.name,
@@ -94,7 +91,6 @@ def get_all_treks():
             "status": t.status,
             "assigned_staff_id": t.assigned_staff_id,
             "assigned_staff_name": t.assigned_staff.name if t.assigned_staff else "Unassigned",
-            "last_booking_time": last_booking_time,
             "booking_close_time": t.booking_close_time.isoformat() if t.booking_close_time else "",
             "booking_closed": booking_closed
         })
@@ -183,7 +179,17 @@ def update_trek(trek_id):
     if "location" in data: t.location = data["location"]
     if "difficulty" in data: t.difficulty = data["difficulty"]
     if "max_slots" in data: t.max_slots = int(data["max_slots"])
-    if "status" in data: t.status = data["status"]
+    if "status" in data:
+        new_status = data["status"]
+        if new_status not in ["Pending", "Approved", "Open", "Closed", "Completed"]:
+            return jsonify({"message": f"Invalid trek status: {new_status}"}), 400
+        t.status = new_status
+        if new_status == "Open":
+            t.booking_close_time = None
+        elif new_status == "Completed":
+            for b in t.bookings:
+                if b.status == Booking.STATUS_BOOKED:
+                    b.status = Booking.STATUS_COMPLETED
     
     if "start_date" in data:
         try:

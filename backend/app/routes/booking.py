@@ -20,7 +20,7 @@ def create_booking():
         return jsonify({"message": "Trek ID is required"}), 400
         
     trek = Trek.query.get_or_404(trek_id)
-    if trek.status not in ["Open", "Approved"]:
+    if trek.status != "Open":
         return jsonify({"message": "Trek is not open for bookings"}), 400
         
     import datetime as dt
@@ -39,7 +39,7 @@ def create_booking():
     # Check for date overlaps with other active bookings
     active_bookings = Booking.query.filter(
         Booking.user_id == user_id,
-        Booking.status.in_([Booking.STATUS_PENDING, Booking.STATUS_CONFIRMED]),
+        Booking.status == Booking.STATUS_BOOKED,
         Booking.trek_id != trek_id
     ).all()
     for ab in active_bookings:
@@ -53,7 +53,7 @@ def create_booking():
                 }), 400
                 
     if existing:  # must be STATUS_CANCELLED
-        existing.status = Booking.STATUS_PENDING
+        existing.status = Booking.STATUS_BOOKED
         existing.slots_booked = slots
         trek.current_participants += slots
         try:
@@ -67,7 +67,7 @@ def create_booking():
         user_id=user_id,
         trek_id=trek_id,
         slots_booked=slots,
-        status=Booking.STATUS_PENDING
+        status=Booking.STATUS_BOOKED
     )
     trek.current_participants += slots
     
@@ -78,7 +78,7 @@ def create_booking():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Error booking trek: {str(e)}"}), 500
-
+ 
 @booking_bp.route("/bookings/<int:booking_id>/cancel", methods=["POST"])
 @token_required
 @role_required(User.ROLE_TREKKER)
@@ -101,7 +101,7 @@ def cancel_booking(booking_id):
     old_status = booking.status
     booking.status = Booking.STATUS_CANCELLED
     
-    if old_status in [Booking.STATUS_PENDING, Booking.STATUS_CONFIRMED]:
+    if old_status == Booking.STATUS_BOOKED:
         trek.current_participants = max(0, trek.current_participants - booking.slots_booked)
         
     try:

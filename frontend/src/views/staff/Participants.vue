@@ -26,8 +26,8 @@
         <div class="col-md-4">
           <select v-model="statusFilter" @change="currentPage = 1" class="form-select bg-black bg-opacity-25 border-secondary text-light">
             <option value="">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Confirmed">Confirmed</option>
+            <option value="Booked">Booked</option>
+            <option value="Cancelled">Cancelled</option>
             <option value="Completed">Completed</option>
           </select>
         </div>
@@ -81,8 +81,7 @@
                     @change="updateBookingStatus(p.booking_id, $event.target.value)" 
                     class="form-select form-select-sm bg-dark text-light border-secondary py-1 px-2 d-inline-block w-auto rounded-3"
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="Confirmed">Confirmed</option>
+                    <option value="Booked">Booked</option>
                     <option value="Cancelled">Cancelled</option>
                     <option value="Completed">Completed</option>
                   </select>
@@ -199,8 +198,7 @@
               @change="updateBookingStatus(detailParticipant.booking_id, $event.target.value); detailParticipant = null" 
               class="form-select bg-dark text-light border-secondary py-2 px-3 rounded-3"
             >
-              <option value="Pending">Pending</option>
-              <option value="Confirmed">Confirmed</option>
+              <option value="Booked">Booked</option>
               <option value="Cancelled">Cancelled</option>
               <option value="Completed">Completed</option>
             </select>
@@ -281,8 +279,7 @@ export default {
     },
     getStatusClass(status) {
       switch (status) {
-        case 'Confirmed': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
-        case 'Pending': return 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
+        case 'Booked': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
         case 'Cancelled': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
         case 'Completed': return 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';

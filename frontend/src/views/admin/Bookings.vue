@@ -26,8 +26,7 @@
         <div class="col-md-4">
           <select v-model="filters.status" @change="onFilterChange" class="form-select bg-black bg-opacity-25 border-secondary text-light">
             <option value="">All Reservation Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Confirmed">Confirmed</option>
+            <option value="Booked">Booked</option>
             <option value="Cancelled">Cancelled</option>
             <option value="Completed">Completed</option>
           </select>
@@ -85,8 +84,7 @@
                     @change="updateStatus(b.id, $event.target.value)" 
                     class="form-select form-select-sm bg-dark text-light border-secondary py-1 px-2 d-inline-block w-auto"
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="Confirmed">Confirmed</option>
+                    <option value="Booked">Booked</option>
                     <option value="Cancelled">Cancelled</option>
                     <option value="Completed">Completed</option>
                   </select>
@@ -135,17 +133,17 @@
           <nav>
             <ul class="pagination pagination-sm mb-0 gap-1">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <button class="page-link bg-dark border-secondary text-secondary rounded-3" @click="currentPage--">
+                <button class="page-link bg-dark border-secondary text-white rounded-3" @click="currentPage--">
                   <i class="bi bi-chevron-left"></i>
                 </button>
               </li>
               <li v-for="p in totalPages" :key="p" class="page-item" :class="{ active: p === currentPage }">
-                <button class="page-link bg-dark border-secondary text-secondary rounded-3"
+                <button class="page-link bg-dark border-secondary text-white rounded-3"
                   :class="{ 'bg-info border-info text-dark': p === currentPage }"
                   @click="currentPage = p">{{ p }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <button class="page-link bg-dark border-secondary text-secondary rounded-3" @click="currentPage++">
+                <button class="page-link bg-dark border-secondary text-white rounded-3" @click="currentPage++">
                   <i class="bi bi-chevron-right"></i>
                 </button>
               </li>
@@ -205,8 +203,7 @@
               @change="updateStatus(detailBooking.id, $event.target.value); detailBooking = null" 
               class="form-select bg-dark text-light border-secondary py-2 px-3 rounded-3"
             >
-              <option value="Pending">Pending</option>
-              <option value="Confirmed">Confirmed</option>
+              <option value="Booked">Booked</option>
               <option value="Cancelled">Cancelled</option>
               <option value="Completed">Completed</option>
             </select>
@@ -300,8 +297,7 @@ export default {
     },
     getStatusClass(status) {
       switch (status) {
-        case 'Confirmed': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
-        case 'Pending': return 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
+        case 'Booked': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
         case 'Cancelled': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
         case 'Completed': return 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';

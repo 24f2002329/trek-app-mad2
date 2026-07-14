@@ -78,9 +78,6 @@
                   <h6 class="fw-bold text-light mb-1">{{ trek.name }}</h6>
                   <span class="small text-secondary d-block"><i class="bi bi-geo-alt me-1"></i> {{ trek.location }}</span>
                   <span class="small text-secondary d-block mt-1"><i class="bi bi-calendar-event me-1"></i> {{ formatDate(trek.start_date) }}</span>
-                  <span class="small text-secondary d-block mt-1" v-if="trek.last_booking_time">
-                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
-                  </span>
                   <span class="small text-secondary d-block mt-1">
                     <i class="bi bi-calendar-x me-1"></i> Bookings: 
                     <span :class="trek.booking_closed ? 'text-danger fw-bold' : 'text-light'">

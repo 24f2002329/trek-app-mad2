@@ -64,12 +64,7 @@
                 <span><i class="bi bi-people-fill text-info me-1"></i> Available Slots:</span>
                 <div class="text-info fw-bold">{{ trek.slots_left }} / {{ trek.max_slots }}</div>
               </div>
-              <div class="col-6 mb-1" v-if="trek.last_booking_time">
-                <span><i class="bi bi-clock-history text-success me-1"></i> Last Booking:</span>
-                <div class="text-light fw-medium text-truncate" style="font-size: 0.78rem;" :title="formatDateTime(trek.last_booking_time)">
-                  {{ formatDateTime(trek.last_booking_time) }}
-                </div>
-              </div>
+
               <div class="col-6 mb-1">
                 <span><i class="bi bi-calendar-x text-warning me-1"></i> Bookings:</span>
                 <div :class="trek.booking_closed ? 'text-danger fw-bold' : 'text-light fw-medium'" class="text-truncate" style="font-size: 0.78rem;">

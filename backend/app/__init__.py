@@ -76,6 +76,31 @@ def create_app(config_class=Config):
                 db.session.rollback()
                 print(f"Error seeding database on startup: {e}")
 
+            # Migrate existing booking and trek statuses for consistency
+            try:
+                from app.models.booking import Booking
+                from app.models.trek import Trek
+                
+                updated = False
+                for b in Booking.query.all():
+                    if b.status in ["Confirmed", "Pending"]:
+                        b.status = Booking.STATUS_BOOKED
+                        updated = True
+                for t in Trek.query.all():
+                    if t.status == "Active":
+                        t.status = "Open"
+                        updated = True
+                    elif t.status == "Cancelled":
+                        t.status = "Closed"
+                        updated = True
+                        
+                if updated:
+                    db.session.commit()
+                    print("Seeded database migration for booking and trek statuses completed.")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error during status migration: {e}")
+
     @app.route("/")
     def home():
         return {"message": "API Running"}

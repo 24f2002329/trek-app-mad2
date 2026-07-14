@@ -103,7 +103,7 @@ export default {
         const data = await userService.getDashboardSummary();
         // Filter out completed and cancelled bookings
         this.activeBookings = data.my_bookings.filter(
-          b => b.status === 'Pending' || b.status === 'Confirmed'
+          b => b.status === 'Booked'
         );
       } catch (err) {
         alertService.error('Failed to load active bookings.');
@@ -122,9 +122,9 @@ export default {
     },
     getStatusClass(status) {
       switch (status) {
-        case 'Confirmed': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
-        case 'Pending': return 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
+        case 'Booked': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
         case 'Cancelled': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
+        case 'Completed': return 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';
       }
     },

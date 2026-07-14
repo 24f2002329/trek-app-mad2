@@ -250,9 +250,10 @@ export default {
     getProgressBarClass(status) {
       switch (status) {
         case 'Open': return 'bg-success';
-        case 'Active': return 'bg-info';
+        case 'Approved': return 'bg-info';
         case 'Pending': return 'bg-warning';
-        case 'Cancelled': return 'bg-danger';
+        case 'Closed': return 'bg-danger';
+        case 'Completed': return 'bg-primary';
         default: return 'bg-secondary';
       }
     },

@@ -41,10 +41,10 @@
           <select v-model="filters.status" @change="fetchTreks" class="form-select bg-black bg-opacity-25 border-secondary text-light">
             <option value="">All Statuses</option>
             <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
             <option value="Open">Open</option>
-            <option value="Active">Active</option>
+            <option value="Closed">Closed</option>
             <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
       </div>
@@ -62,11 +62,11 @@
 
     <div v-else class="d-flex flex-column gap-5">
       
-      <!-- 1. ACTIVE / ONGOING SECTION -->
+      <!-- 1. APPROVED SECTION -->
       <div v-if="activeTreks.length > 0" class="section-group">
         <h4 class="h5 fw-bold text-gradient-info mb-4 d-flex align-items-center gap-2">
           <span class="status-dot bg-info"></span>
-          Active / Ongoing Treks ({{ activeTreks.length }})
+          Approved Treks ({{ activeTreks.length }})
         </h4>
         <div class="row g-4">
           <div class="col-md-6 col-lg-4" v-for="trek in activeTreks" :key="trek.id">
@@ -82,9 +82,6 @@
                   <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
                   <div class="text-secondary small d-flex align-items-center gap-1">
                     <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
-                  </div>
-                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
-                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
                   </div>
                   <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
                     <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
@@ -152,9 +149,6 @@
                   <div class="text-secondary small d-flex align-items-center gap-1">
                     <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
                   </div>
-                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
-                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
-                  </div>
                   <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
                     <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
                   </div>
@@ -221,9 +215,6 @@
                   <div class="text-secondary small d-flex align-items-center gap-1">
                     <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
                   </div>
-                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
-                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
-                  </div>
                   <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
                     <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
                   </div>
@@ -269,11 +260,11 @@
         </div>
       </div>
 
-      <!-- 4. COMPLETED & CANCELLED SECTION -->
+      <!-- 4. COMPLETED SECTION -->
       <div v-if="completedCancelledTreks.length > 0" class="section-group">
         <h4 class="h5 fw-bold text-gradient-secondary mb-4 d-flex align-items-center gap-2">
           <span class="status-dot bg-secondary"></span>
-          Completed & Cancelled ({{ completedCancelledTreks.length }})
+          Completed Treks ({{ completedCancelledTreks.length }})
         </h4>
         <div class="row g-4">
           <div class="col-md-6 col-lg-4" v-for="trek in completedCancelledTreks" :key="trek.id">
@@ -289,9 +280,6 @@
                   <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
                   <div class="text-secondary small d-flex align-items-center gap-1">
                     <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
-                  </div>
-                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
-                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
                   </div>
                   <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
                     <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
@@ -400,10 +388,10 @@
                   <label class="form-label text-secondary small">Status *</label>
                   <select v-model="form.status" class="form-select bg-black bg-opacity-25 border-secondary text-light" required>
                     <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
                     <option value="Open">Open</option>
-                    <option value="Active">Active</option>
+                    <option value="Closed">Closed</option>
                     <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
                   </select>
                 </div>
                 <div class="col-12">
@@ -469,7 +457,7 @@ export default {
   },
   computed: {
     activeTreks() {
-      return this.treks.filter(t => t.status === 'Active');
+      return this.treks.filter(t => t.status === 'Approved');
     },
     openTreks() {
       return this.treks.filter(t => t.status === 'Open');
@@ -478,7 +466,7 @@ export default {
       return this.treks.filter(t => t.status === 'Pending' || t.status === 'Closed');
     },
     completedCancelledTreks() {
-      return this.treks.filter(t => t.status === 'Completed' || t.status === 'Cancelled');
+      return this.treks.filter(t => t.status === 'Completed');
     },
     calculatedDuration() {
       if (this.form.start_date && this.form.end_date) {
@@ -535,9 +523,9 @@ export default {
     getStatusClass(status) {
       switch (status) {
         case 'Open': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
-        case 'Active': return 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
+        case 'Approved': return 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
         case 'Pending': return 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
-        case 'Cancelled': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
+        case 'Closed': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
         case 'Completed': return 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';
       }

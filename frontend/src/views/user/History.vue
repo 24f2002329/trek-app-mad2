@@ -98,8 +98,7 @@ export default {
     },
     getStatusClass(status) {
       switch (status) {
-        case 'Confirmed': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
-        case 'Pending': return 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
+        case 'Booked': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
         case 'Cancelled': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
         case 'Completed': return 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';
@@ -107,13 +106,13 @@ export default {
     },
     getOutcomeLabel(b) {
       if (b.status === 'Cancelled') return 'Cancelled';
-      if (b.status === 'Confirmed') {
+      if (b.status === 'Booked') {
         const today = new Date();
         const start = b.start_date ? new Date(b.start_date) : null;
         if (start && start < today) {
           return 'Completed';
         }
-        return 'Confirmed';
+        return 'Booked';
       }
       return b.status;
     }

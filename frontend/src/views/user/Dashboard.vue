@@ -172,7 +172,7 @@ export default {
     },
     getStatusClass(status) {
       switch (status) {
-        case 'Confirmed': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
+        case 'Booked': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
         case 'Pending': return 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
         case 'Cancelled': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
         case 'Completed': return 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25';

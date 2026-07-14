@@ -128,17 +128,17 @@
           <nav>
             <ul class="pagination pagination-sm mb-0 gap-1">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <button class="page-link bg-dark border-secondary text-secondary rounded-3" @click="currentPage--">
+                <button class="page-link bg-dark border-secondary text-white rounded-3" @click="currentPage--">
                   <i class="bi bi-chevron-left"></i>
                 </button>
               </li>
               <li v-for="p in totalPages" :key="p" class="page-item" :class="{ active: p === currentPage }">
-                <button class="page-link bg-dark border-secondary text-secondary rounded-3"
+                <button class="page-link bg-dark border-secondary text-white rounded-3"
                   :class="{ 'bg-info border-info text-dark': p === currentPage }"
                   @click="currentPage = p">{{ p }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <button class="page-link bg-dark border-secondary text-secondary rounded-3" @click="currentPage++">
+                <button class="page-link bg-dark border-secondary text-white rounded-3" @click="currentPage++">
                   <i class="bi bi-chevron-right"></i>
                 </button>
               </li>

@@ -38,7 +38,7 @@ def user_dashboard_summary():
             "status": b.status
         }
         
-        if b.status == Booking.STATUS_CANCELLED or (t.end_date and t.end_date < today):
+        if b.status in [Booking.STATUS_CANCELLED, Booking.STATUS_COMPLETED] or (t.end_date and t.end_date < today) or t.status == "Completed":
             booking_history.append(booking_data)
         else:
             my_bookings.append(booking_data)
@@ -47,7 +47,7 @@ def user_dashboard_summary():
                 
     booked_trek_ids = [b.trek_id for b in bookings]
     recommended_treks = Trek.query.filter(
-        Trek.status.in_(["Open", "Approved", "Active"]),
+        Trek.status == "Open",
         ~Trek.id.in_(booked_trek_ids) if booked_trek_ids else True
     ).limit(3).all()
     
