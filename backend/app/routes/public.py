@@ -69,7 +69,7 @@ def public_treks():
     location = request.args.get("location", "")
     duration = request.args.get("duration", "")
     
-    query = Trek.query.filter(Trek.status.in_(["Pending", "Approved", "Open", "Closed", "Completed"]))
+    query = Trek.query.filter(Trek.status.in_(["Approved", "Open"]))
     
     if search:
         query = query.filter(
