@@ -115,6 +115,13 @@ def create_trek():
         return jsonify({"message": "Missing required fields"}), 400
         
     try:
+        max_slots_int = int(max_slots)
+        if max_slots_int <= 0:
+            raise ValueError()
+    except ValueError:
+        return jsonify({"message": "Slots capacity must be a positive integer"}), 400
+        
+    try:
         start_date = dt.datetime.strptime(start_date_str, "%Y-%m-%d").date()
         end_date = dt.datetime.strptime(end_date_str, "%Y-%m-%d").date()
     except ValueError:
@@ -181,7 +188,16 @@ def update_trek(trek_id):
     if "description" in data: t.description = data["description"]
     if "location" in data: t.location = data["location"]
     if "difficulty" in data: t.difficulty = data["difficulty"]
-    if "max_slots" in data: t.max_slots = int(data["max_slots"])
+    if "max_slots" in data:
+        try:
+            max_slots_int = int(data["max_slots"])
+            if max_slots_int <= 0:
+                raise ValueError()
+        except ValueError:
+            return jsonify({"message": "Slots capacity must be a positive integer"}), 400
+        if max_slots_int < t.current_participants:
+            return jsonify({"message": f"Cannot set slots below booked capacity ({t.current_participants})"}), 400
+        t.max_slots = max_slots_int
     if "status" in data:
         new_status = data["status"]
         if new_status not in ["Pending", "Approved", "Open", "Closed", "Completed"]:

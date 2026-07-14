@@ -57,8 +57,19 @@ export default {
   },
   methods: {
     async handleLogin() {
-      this.loading = true;
       this.error = '';
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.email)) {
+        this.error = 'Please enter a valid email address.';
+        return;
+      }
+      if (!this.password || this.password.length < 8) {
+        this.error = 'Password must be at least 8 characters long.';
+        return;
+      }
+      
+      this.loading = true;
       try {
         const response = await authService.login(this.email, this.password);
         const redirectPath = this.$route.query.redirect || response.redirect;

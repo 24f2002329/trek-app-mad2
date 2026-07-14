@@ -65,9 +65,24 @@ export default {
   },
   methods: {
     async handleRegister() {
-      this.loading = true;
       this.error = '';
       this.success = '';
+      
+      if (!this.name || this.name.trim().length < 3) {
+        this.error = 'Full name must be at least 3 characters long.';
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.email)) {
+        this.error = 'Please enter a valid email address.';
+        return;
+      }
+      if (!this.password || this.password.length < 8) {
+        this.error = 'Password must be at least 8 characters long.';
+        return;
+      }
+      
+      this.loading = true;
       try {
         await authService.register(this.name, this.email, this.password);
         this.success = 'Registration successful! Redirecting to login...';

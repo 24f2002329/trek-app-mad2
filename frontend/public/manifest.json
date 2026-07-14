@@ -1,0 +1,22 @@
+{
+  "name": "TrekSphere Trekking Management",
+  "short_name": "TrekSphere",
+  "description": "Premium trekking management application for trekkers, staff, and admins.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#0dcaf0",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "logo-pwa-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo-pwa-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

@@ -15,6 +15,14 @@ def register():
     if not name or not email or not password:
         return jsonify({"message": "Name, email, and password are required"}), 400
 
+    import re
+    if len(name.strip()) < 3:
+        return jsonify({"message": "Name must be at least 3 characters long"}), 400
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return jsonify({"message": "Invalid email address format"}), 400
+    if len(password) < 8:
+        return jsonify({"message": "Password must be at least 8 characters long"}), 400
+
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
         return jsonify({"message": "User with this email already exists"}), 409
@@ -44,6 +52,12 @@ def login():
 
     if not email or not password:
         return jsonify({"message": "Email and password are required"}), 400
+
+    import re
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return jsonify({"message": "Invalid email address format"}), 400
+    if len(password) < 8:
+        return jsonify({"message": "Password must be at least 8 characters long"}), 400
 
     user = User.query.filter_by(email=email).first()
     if not user or not user.check_password(password):
