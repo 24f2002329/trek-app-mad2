@@ -18,4 +18,11 @@ dist/
 # VSCode
 .vscode/
 
+# Celery Beat
+celerybeat-schedule*
+
+backend/exports/
+
+backend/logs/
+
 project-documents/

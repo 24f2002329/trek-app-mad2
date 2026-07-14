@@ -13,6 +13,9 @@ def create_app(config_class=Config):
 
     db.init_app(app)               
 
+    from app.utils.celery import celery_init_app
+    celery_init_app(app)
+
     from app.routes import register_blueprints
     register_blueprints(app)        
 

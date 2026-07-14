@@ -6,7 +6,16 @@
         <h1 class="display-6 fw-bold text-light">My <span class="text-gradient">Bookings</span></h1>
         <p class="text-secondary mb-0">Manage your active reservations, check approval status, or cancel bookings.</p>
       </div>
-      <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
+      <div class="col-md-6 text-center text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2 flex-wrap justify-content-center">
+        <button @click="triggerCSVExport" :disabled="exporting" class="btn btn-outline-info px-4 py-2 rounded-3">
+          <span v-if="exporting">
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Exporting...
+          </span>
+          <span v-else>
+            <i class="bi bi-file-earmark-arrow-down me-1"></i>Export History
+          </span>
+        </button>
         <router-link to="/browse-treks" class="btn btn-glow px-4 py-2">
           <i class="bi bi-compass me-1"></i>Find New Trek
         </router-link>
@@ -93,10 +102,60 @@ export default {
     return {
       activeBookings: [],
       loading: true,
-      cancellingId: null
+      cancellingId: null,
+      exporting: false
     };
   },
   methods: {
+    async triggerCSVExport() {
+      this.exporting = true;
+      try {
+        const response = await userService.triggerCSVExport();
+        const taskId = response.task_id;
+        alertService.success('CSV Export started. Processing in background...');
+        this.pollExportStatus(taskId);
+      } catch (err) {
+        alertService.error('Failed to trigger CSV export.');
+        this.exporting = false;
+      }
+    },
+    async pollExportStatus(taskId) {
+      try {
+        const response = await userService.getExportStatus(taskId);
+        if (response.status === 'SUCCESS') {
+          const filename = response.result.filename;
+          alertService.success('CSV Export ready! Starting download...');
+          this.exporting = false;
+          
+          const token = localStorage.getItem('token');
+          const downloadUrl = `/api/user/download-export/${filename}`;
+          
+          const res = await fetch(downloadUrl, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', filename);
+          document.body.appendChild(link);
+          link.click();
+          link.parentNode.removeChild(link);
+        } else if (response.status === 'FAILURE') {
+          alertService.error('Export failed: ' + response.error);
+          this.exporting = false;
+        } else {
+          setTimeout(() => {
+            this.pollExportStatus(taskId);
+          }, 1500);
+        }
+      } catch (err) {
+        alertService.error('Error checking export status.');
+        this.exporting = false;
+      }
+    },
     async fetchBookings() {
       this.loading = true;
       try {

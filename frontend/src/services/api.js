@@ -197,6 +197,14 @@ export const userService = {
   async cancelBooking(bookingId) {
     const response = await api.post(`/api/booking/bookings/${bookingId}/cancel`);
     return response.data;
+  },
+  async triggerCSVExport() {
+    const response = await api.post('/api/user/export-history');
+    return response.data;
+  },
+  async getExportStatus(taskId) {
+    const response = await api.get(`/api/user/export-status/${taskId}`);
+    return response.data;
   }
 };
 
