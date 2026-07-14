@@ -10,6 +10,9 @@ import AdminUsers from '../views/admin/Users.vue';
 import AdminBookings from '../views/admin/Bookings.vue';
 import AdminReports from '../views/admin/Reports.vue';
 import StaffDashboard from '../views/staff/Dashboard.vue';
+import StaffTreks from '../views/staff/MyTreks.vue';
+import StaffParticipants from '../views/staff/Participants.vue';
+import StaffProfile from '../views/staff/Profile.vue';
 import UserDashboard from '../views/user/Dashboard.vue';
 import { authService } from '../services/api';
 
@@ -82,6 +85,24 @@ const routes = [
     path: '/staff/dashboard',
     name: 'StaffDashboard',
     component: StaffDashboard,
+    meta: { requiresAuth: true, role: 'trek_staff' }
+  },
+  {
+    path: '/staff/treks',
+    name: 'StaffTreks',
+    component: StaffTreks,
+    meta: { requiresAuth: true, role: 'trek_staff' }
+  },
+  {
+    path: '/staff/participants',
+    name: 'StaffParticipants',
+    component: StaffParticipants,
+    meta: { requiresAuth: true, role: 'trek_staff' }
+  },
+  {
+    path: '/staff/profile',
+    name: 'StaffProfile',
+    component: StaffProfile,
     meta: { requiresAuth: true, role: 'trek_staff' }
   },
 

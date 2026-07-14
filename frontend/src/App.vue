@@ -1,5 +1,7 @@
 <template>
   <div id="app" class="d-flex flex-column min-vh-100 bg-dark text-light position-relative">
+    <AlertContainer />
+    <ConfirmContainer />
     <!-- Show Navbar only on non-dashboard routes -->
     <Navbar v-if="!isDashboardRoute" />
     
@@ -22,11 +24,15 @@
 
 <script>
 import Navbar from './components/Navbar.vue';
+import AlertContainer from './components/AlertContainer.vue';
+import ConfirmContainer from './components/ConfirmContainer.vue';
 
 export default {
   name: 'App',
   components: {
-    Navbar
+    Navbar,
+    AlertContainer,
+    ConfirmContainer
   },
   computed: {
     isDashboardRoute() {

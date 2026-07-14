@@ -57,9 +57,23 @@
                 <span><i class="bi bi-calendar-event text-warning me-1"></i> Starts:</span>
                 <div class="text-light fw-medium">{{ formatDate(trek.start_date) }}</div>
               </div>
-              <div class="col-6">
+              <div class="col-6 mb-1">
                 <span><i class="bi bi-people-fill text-info me-1"></i> Available Slots:</span>
                 <div class="text-info fw-bold">{{ trek.slots_left }} / {{ trek.max_slots }}</div>
+              </div>
+              <div class="col-6 mb-1" v-if="trek.last_booking_time">
+                <span><i class="bi bi-clock-history text-success me-1"></i> Last Booking:</span>
+                <div class="text-light fw-medium text-truncate" style="font-size: 0.78rem;" :title="formatDateTime(trek.last_booking_time)">
+                  {{ formatDateTime(trek.last_booking_time) }}
+                </div>
+              </div>
+              <div class="col-6 mb-1">
+                <span><i class="bi bi-calendar-x text-warning me-1"></i> Bookings:</span>
+                <div :class="trek.booking_closed ? 'text-danger fw-bold' : 'text-light fw-medium'" class="text-truncate" style="font-size: 0.78rem;">
+                  <span v-if="trek.booking_closed">Closed</span>
+                  <span v-else-if="trek.booking_close_time">{{ formatDateTime(trek.booking_close_time) }}</span>
+                  <span v-else>Open</span>
+                </div>
               </div>
             </div>
           </div>
@@ -128,6 +142,10 @@
                       <span class="text-secondary">Available Slots:</span>
                       <span class="text-info fw-bold">{{ activeTrek.slots_left }}</span>
                     </div>
+                    <div class="d-flex justify-content-between" v-if="activeTrek.booking_close_time">
+                      <span class="text-secondary">Deadline:</span>
+                      <span class="text-warning fw-bold">{{ formatDateTime(activeTrek.booking_close_time) }}</span>
+                    </div>
                     <div class="d-flex justify-content-between" v-if="activeTrek.assigned_staff">
                       <span class="text-secondary">Leader:</span>
                       <span class="text-light fw-bold">{{ activeTrek.assigned_staff.name }}</span>
@@ -136,14 +154,16 @@
 
                   <!-- Booking Widget Inside Details -->
                   <div v-if="isTrekker">
-                    <h6 class="fw-bold mb-2 text-light">Book Slots</h6>
-                    <div class="input-group mb-3">
+                    <h6 class="fw-bold mb-2 text-light" v-if="!activeTrek.booking_closed">Book Slots</h6>
+                    <div class="input-group mb-3" v-if="!activeTrek.booking_closed">
                       <button class="btn btn-outline-secondary border-secondary text-light px-2 py-1" type="button" @click="bookingSlots = Math.max(1, bookingSlots - 1)">-</button>
                       <input type="number" v-model.number="bookingSlots" class="form-control bg-dark text-light border-secondary text-center" min="1" :max="activeTrek.slots_left" />
                       <button class="btn btn-outline-secondary border-secondary text-light px-2 py-1" type="button" @click="bookingSlots = Math.min(activeTrek.slots_left, bookingSlots + 1)">+</button>
                     </div>
-                    <button @click="confirmBooking" class="btn btn-glow w-100 py-2 rounded-3" :disabled="activeTrek.slots_left <= 0">
-                      {{ activeTrek.slots_left <= 0 ? 'Fully Booked' : 'Confirm Booking' }}
+                    <button @click="confirmBooking" class="btn btn-glow w-100 py-2 rounded-3" :disabled="activeTrek.slots_left <= 0 || activeTrek.booking_closed">
+                      <span v-if="activeTrek.booking_closed">Booking Closed</span>
+                      <span v-else-if="activeTrek.slots_left <= 0">Fully Booked</span>
+                      <span v-else>Confirm Booking</span>
                     </button>
                   </div>
                   <div v-else-if="!isLoggedIn">
@@ -177,6 +197,7 @@
 
 <script>
 import { publicService, userService, authService } from '../services/api';
+import { alertService } from '@/services/alert';
 
 export default {
   name: 'Treks',
@@ -209,10 +230,25 @@ export default {
       if (!dateStr) return 'N/A';
       try {
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return d.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
       } catch (e) {
         return dateStr;
       }
+    },
+    formatDateTime(dateStr) {
+      if (!dateStr) return 'N/A';
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleString('en-GB', { 
+          timeZone: 'Asia/Kolkata', 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true
+        });
+      } catch (e) { return dateStr; }
     },
     async fetchTreks() {
       this.loading = true;
@@ -265,7 +301,7 @@ export default {
       if (!this.isLoggedIn) {
         this.redirectToLogin();
       } else if (!this.isTrekker) {
-        alert('Booking is only available for accounts registered as Trekkers.');
+        alertService.warning('Booking is only available for accounts registered as Trekkers.');
       } else {
         this.showDetails(trek);
       }
@@ -280,16 +316,12 @@ export default {
       if (!this.activeTrek) return;
       try {
         const response = await userService.createBooking(this.activeTrek.id, this.bookingSlots);
-        this.successMessage = response.message || 'Booking request submitted!';
+        alertService.success(response.message || 'Booking request submitted!');
         this.closeDetails();
         this.fetchTreks();
-        
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 4000);
       } catch (err) {
         const errMsg = err.response?.data?.message || 'Failed to submit booking request.';
-        alert(errMsg);
+        alertService.error(errMsg);
       }
     }
   },

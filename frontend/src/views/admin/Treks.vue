@@ -8,7 +8,7 @@
       </div>
       <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
         <button @click="openCreateModal" class="btn btn-glow px-4 py-2">
-          <i class="bi bi-plus-circle-fill me-2"></i>Create New Trek
+          <i class="bi bi-plus-circle-fill me-2"></i>Create New Route
         </button>
       </div>
     </div>
@@ -60,62 +60,281 @@
       <p class="text-secondary mb-0">No treks found in database.</p>
     </div>
 
-    <div v-else class="row g-4">
-      <div class="col-md-6 col-lg-4" v-for="trek in treks" :key="trek.id">
-        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow h-100 rounded-4 overflow-hidden position-relative hover-card">
-          <!-- Difficulty Badge -->
-          <div class="position-absolute top-0 end-0 m-3 z-1">
-            <span class="badge rounded-pill px-3 py-1 bg-black bg-opacity-60 border border-opacity-20 text-light" :class="getDifficultyClass(trek.difficulty)">
-              {{ trek.difficulty }}
-            </span>
-          </div>
-
-          <div class="p-4 d-flex flex-column h-100">
-            <div class="mb-3">
-              <span class="text-info small fw-bold">ID: {{ trek.id }}</span>
-              <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
-              <div class="text-secondary small d-flex align-items-center gap-1">
-                <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
+    <div v-else class="d-flex flex-column gap-5">
+      
+      <!-- 1. ACTIVE / ONGOING SECTION -->
+      <div v-if="activeTreks.length > 0" class="section-group">
+        <h4 class="h5 fw-bold text-gradient-info mb-4 d-flex align-items-center gap-2">
+          <span class="status-dot bg-info"></span>
+          Active / Ongoing Expeditions ({{ activeTreks.length }})
+        </h4>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4" v-for="trek in activeTreks" :key="trek.id">
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow h-100 rounded-4 overflow-hidden position-relative hover-card">
+              <div class="position-absolute top-0 end-0 m-3 z-1">
+                <span class="badge rounded-pill px-3 py-1 bg-black bg-opacity-60 border border-opacity-20 text-light" :class="getDifficultyClass(trek.difficulty)">
+                  {{ trek.difficulty }}
+                </span>
               </div>
-            </div>
-
-            <p class="text-secondary small mb-4 flex-grow-1 text-line-clamp">
-              {{ trek.description || 'No description provided for this trek.' }}
-            </p>
-
-            <div class="p-3 bg-black bg-opacity-25 rounded-3 mb-4 border border-secondary border-opacity-10">
-              <div class="row g-2 text-center">
-                <div class="col-4 border-end border-secondary border-opacity-25">
-                  <span class="text-secondary tiny-text d-block">Duration</span>
-                  <strong class="text-light text-nowrap">{{ trek.duration }} Days</strong>
+              <div class="p-4 d-flex flex-column h-100">
+                <div class="mb-3">
+                  <span class="text-info small fw-bold">ID: {{ trek.id }}</span>
+                  <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
+                  <div class="text-secondary small d-flex align-items-center gap-1">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
+                  </div>
+                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
+                  </div>
+                  <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
+                  </div>
                 </div>
-                <div class="col-4 border-end border-secondary border-opacity-25">
-                  <span class="text-secondary tiny-text d-block">Booked Slots</span>
-                  <strong class="text-light">{{ trek.current_participants }} / {{ trek.max_slots }}</strong>
+                <p class="text-secondary small mb-4 flex-grow-1 text-line-clamp">
+                  {{ trek.description || 'No description provided for this trek.' }}
+                </p>
+                <div class="p-3 bg-black bg-opacity-25 rounded-3 mb-4 border border-secondary border-opacity-10">
+                  <div class="row g-2 text-center">
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Duration</span>
+                      <strong class="text-light text-nowrap" style="font-size: 0.85rem;">{{ trek.duration }} Days</strong>
+                    </div>
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Booked Slots</span>
+                      <strong class="text-light" style="font-size: 0.85rem;">{{ trek.current_participants }} / {{ trek.max_slots }}</strong>
+                    </div>
+                    <div class="col-4">
+                      <span class="text-secondary tiny-text d-block">Guide</span>
+                      <strong class="text-warning text-truncate d-block small" :title="trek.assigned_staff_name">
+                        {{ trek.assigned_staff_name || 'Unassigned' }}
+                      </strong>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-4">
-                  <span class="text-secondary tiny-text d-block">Guide</span>
-                  <strong class="text-warning text-truncate d-block small" :title="trek.assigned_staff_name">
-                    {{ trek.assigned_staff_name }}
-                  </strong>
+                <div class="d-flex justify-content-between align-items-center mt-auto border-top border-secondary border-opacity-10 pt-3">
+                  <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                  <div class="d-flex gap-2">
+                    <button v-if="!trek.booking_closed" @click="closeBooking(trek)" class="btn btn-outline-warning btn-sm rounded-3" title="Close Booking">
+                      <i class="bi bi-calendar-x"></i>
+                    </button>
+                    <button @click="openEditModal(trek)" class="btn btn-outline-info btn-sm rounded-3" title="Edit Trek">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button @click="confirmDelete(trek)" class="btn btn-outline-danger btn-sm rounded-3" title="Delete Trek">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mt-auto border-top border-secondary border-opacity-10 pt-3">
-              <span class="badge" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
-              <div class="d-flex gap-2">
-                <button @click="openEditModal(trek)" class="btn btn-outline-info btn-sm rounded-3" title="Edit Trek">
-                  <i class="bi bi-pencil-square"></i>
-                </button>
-                <button @click="confirmDelete(trek)" class="btn btn-outline-danger btn-sm rounded-3" title="Delete Trek">
-                  <i class="bi bi-trash-fill"></i>
-                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- 2. OPEN FOR BOOKINGS SECTION -->
+      <div v-if="openTreks.length > 0" class="section-group">
+        <h4 class="h5 fw-bold text-gradient-success mb-4 d-flex align-items-center gap-2">
+          <span class="status-dot bg-success"></span>
+          Open for Bookings ({{ openTreks.length }})
+        </h4>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4" v-for="trek in openTreks" :key="trek.id">
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow h-100 rounded-4 overflow-hidden position-relative hover-card">
+              <div class="position-absolute top-0 end-0 m-3 z-1">
+                <span class="badge rounded-pill px-3 py-1 bg-black bg-opacity-60 border border-opacity-20 text-light" :class="getDifficultyClass(trek.difficulty)">
+                  {{ trek.difficulty }}
+                </span>
+              </div>
+              <div class="p-4 d-flex flex-column h-100">
+                <div class="mb-3">
+                  <span class="text-info small fw-bold">ID: {{ trek.id }}</span>
+                  <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
+                  <div class="text-secondary small d-flex align-items-center gap-1">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
+                  </div>
+                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
+                  </div>
+                  <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
+                  </div>
+                </div>
+                <p class="text-secondary small mb-4 flex-grow-1 text-line-clamp">
+                  {{ trek.description || 'No description provided for this trek.' }}
+                </p>
+                <div class="p-3 bg-black bg-opacity-25 rounded-3 mb-4 border border-secondary border-opacity-10">
+                  <div class="row g-2 text-center">
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Duration</span>
+                      <strong class="text-light text-nowrap" style="font-size: 0.85rem;">{{ trek.duration }} Days</strong>
+                    </div>
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Booked Slots</span>
+                      <strong class="text-light" style="font-size: 0.85rem;">{{ trek.current_participants }} / {{ trek.max_slots }}</strong>
+                    </div>
+                    <div class="col-4">
+                      <span class="text-secondary tiny-text d-block">Guide</span>
+                      <strong class="text-warning text-truncate d-block small" :title="trek.assigned_staff_name">
+                        {{ trek.assigned_staff_name || 'Unassigned' }}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-auto border-top border-secondary border-opacity-10 pt-3">
+                  <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                  <div class="d-flex gap-2">
+                    <button v-if="!trek.booking_closed" @click="closeBooking(trek)" class="btn btn-outline-warning btn-sm rounded-3" title="Close Booking">
+                      <i class="bi bi-calendar-x"></i>
+                    </button>
+                    <button @click="openEditModal(trek)" class="btn btn-outline-info btn-sm rounded-3" title="Edit Trek">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button @click="confirmDelete(trek)" class="btn btn-outline-danger btn-sm rounded-3" title="Delete Trek">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. PENDING APPROVAL / CLOSED SECTION -->
+      <div v-if="pendingTreks.length > 0" class="section-group">
+        <h4 class="h5 fw-bold text-gradient-warning mb-4 d-flex align-items-center gap-2">
+          <span class="status-dot bg-warning"></span>
+          Pending / Closed ({{ pendingTreks.length }})
+        </h4>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4" v-for="trek in pendingTreks" :key="trek.id">
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow h-100 rounded-4 overflow-hidden position-relative hover-card">
+              <div class="position-absolute top-0 end-0 m-3 z-1">
+                <span class="badge rounded-pill px-3 py-1 bg-black bg-opacity-60 border border-opacity-20 text-light" :class="getDifficultyClass(trek.difficulty)">
+                  {{ trek.difficulty }}
+                </span>
+              </div>
+              <div class="p-4 d-flex flex-column h-100">
+                <div class="mb-3">
+                  <span class="text-info small fw-bold">ID: {{ trek.id }}</span>
+                  <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
+                  <div class="text-secondary small d-flex align-items-center gap-1">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
+                  </div>
+                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
+                  </div>
+                  <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
+                  </div>
+                </div>
+                <p class="text-secondary small mb-4 flex-grow-1 text-line-clamp">
+                  {{ trek.description || 'No description provided for this trek.' }}
+                </p>
+                <div class="p-3 bg-black bg-opacity-25 rounded-3 mb-4 border border-secondary border-opacity-10">
+                  <div class="row g-2 text-center">
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Duration</span>
+                      <strong class="text-light text-nowrap" style="font-size: 0.85rem;">{{ trek.duration }} Days</strong>
+                    </div>
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Booked Slots</span>
+                      <strong class="text-light" style="font-size: 0.85rem;">{{ trek.current_participants }} / {{ trek.max_slots }}</strong>
+                    </div>
+                    <div class="col-4">
+                      <span class="text-secondary tiny-text d-block">Guide</span>
+                      <strong class="text-warning text-truncate d-block small" :title="trek.assigned_staff_name">
+                        {{ trek.assigned_staff_name || 'Unassigned' }}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-auto border-top border-secondary border-opacity-10 pt-3">
+                  <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                  <div class="d-flex gap-2">
+                    <button v-if="!trek.booking_closed && ['Open', 'Approved', 'Active'].includes(trek.status)" @click="closeBooking(trek)" class="btn btn-outline-warning btn-sm rounded-3" title="Close Booking">
+                      <i class="bi bi-calendar-x"></i>
+                    </button>
+                    <button @click="openEditModal(trek)" class="btn btn-outline-info btn-sm rounded-3" title="Edit Trek">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button @click="confirmDelete(trek)" class="btn btn-outline-danger btn-sm rounded-3" title="Delete Trek">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. COMPLETED & CANCELLED SECTION -->
+      <div v-if="completedCancelledTreks.length > 0" class="section-group">
+        <h4 class="h5 fw-bold text-gradient-secondary mb-4 d-flex align-items-center gap-2">
+          <span class="status-dot bg-secondary"></span>
+          Completed & Cancelled ({{ completedCancelledTreks.length }})
+        </h4>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4" v-for="trek in completedCancelledTreks" :key="trek.id">
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow h-100 rounded-4 overflow-hidden position-relative hover-card">
+              <div class="position-absolute top-0 end-0 m-3 z-1">
+                <span class="badge rounded-pill px-3 py-1 bg-black bg-opacity-60 border border-opacity-20 text-light" :class="getDifficultyClass(trek.difficulty)">
+                  {{ trek.difficulty }}
+                </span>
+              </div>
+              <div class="p-4 d-flex flex-column h-100">
+                <div class="mb-3">
+                  <span class="text-info small fw-bold">ID: {{ trek.id }}</span>
+                  <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
+                  <div class="text-secondary small d-flex align-items-center gap-1">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ trek.location }}
+                  </div>
+                  <div class="small text-secondary mt-2" v-if="trek.last_booking_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-clock-history me-1"></i> Last Booking: {{ formatDateTime(trek.last_booking_time) }}
+                  </div>
+                  <div class="small text-secondary mt-1" v-if="trek.booking_close_time" style="font-size: 0.75rem;">
+                    <i class="bi bi-calendar-x me-1"></i> Booking Deadline: {{ formatDateTime(trek.booking_close_time) }}
+                  </div>
+                </div>
+                <p class="text-secondary small mb-4 flex-grow-1 text-line-clamp">
+                  {{ trek.description || 'No description provided for this trek.' }}
+                </p>
+                <div class="p-3 bg-black bg-opacity-25 rounded-3 mb-4 border border-secondary border-opacity-10">
+                  <div class="row g-2 text-center">
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Duration</span>
+                      <strong class="text-light text-nowrap" style="font-size: 0.85rem;">{{ trek.duration }} Days</strong>
+                    </div>
+                    <div class="col-4 border-end border-secondary border-opacity-25">
+                      <span class="text-secondary tiny-text d-block">Booked Slots</span>
+                      <strong class="text-light" style="font-size: 0.85rem;">{{ trek.current_participants }} / {{ trek.max_slots }}</strong>
+                    </div>
+                    <div class="col-4">
+                      <span class="text-secondary tiny-text d-block">Guide</span>
+                      <strong class="text-warning text-truncate d-block small" :title="trek.assigned_staff_name">
+                        {{ trek.assigned_staff_name || 'Unassigned' }}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-auto border-top border-secondary border-opacity-10 pt-3">
+                  <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                  <div class="d-flex gap-2">
+                    <button @click="openEditModal(trek)" class="btn btn-outline-info btn-sm rounded-3" title="Edit Trek">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button @click="confirmDelete(trek)" class="btn btn-outline-danger btn-sm rounded-3" title="Delete Trek">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Bootstrap Modal for Create/Edit (Teleported to body to avoid stacking context issues) -->
@@ -125,7 +344,7 @@
         <div class="modal-content bg-dark text-light border border-secondary border-opacity-50 rounded-4">
           <div class="modal-header border-secondary border-opacity-25">
             <h5 class="modal-title fw-bold text-light">
-              {{ isEdit ? 'Edit Trek' : 'Create Trek' }}
+              {{ isEdit ? 'Edit Trekking Route' : 'Create Trekking Route' }}
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -140,7 +359,7 @@
                   <label class="form-label text-secondary small">Location *</label>
                   <input v-model="form.location" type="text" class="form-control bg-black bg-opacity-25 border-secondary text-light" placeholder="e.g. Uttarakhand, India" required />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                   <label class="form-label text-secondary small">Difficulty *</label>
                   <select v-model="form.difficulty" class="form-select bg-black bg-opacity-25 border-secondary text-light" required>
                     <option value="Easy">Easy</option>
@@ -149,17 +368,24 @@
                     <option value="Expert">Expert</option>
                   </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                   <label class="form-label text-secondary small">Max slots *</label>
                   <input v-model.number="form.max_slots" type="number" min="1" class="form-control bg-black bg-opacity-25 border-secondary text-light" placeholder="e.g. 20" required />
                 </div>
-                <div class="col-md-6">
+                 <div class="col-md-4">
                   <label class="form-label text-secondary small">Start Date *</label>
                   <input v-model="form.start_date" type="date" class="form-control bg-black bg-opacity-25 border-secondary text-light" required />
                 </div>
-                <div class="col-md-6">
-                  <label class="form-label text-secondary small">End Date *</label>
+                <div class="col-md-4">
+                  <label class="form-label text-secondary small">
+                    End Date * 
+                    <span v-if="calculatedDuration !== null" class="text-info fw-bold ms-1">({{ calculatedDuration }} Days)</span>
+                  </label>
                   <input v-model="form.end_date" type="date" class="form-control bg-black bg-opacity-25 border-secondary text-light" :min="form.start_date" required />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label text-secondary small">Booking Close Deadline</label>
+                  <input v-model="form.booking_close_time" type="datetime-local" class="form-control bg-black bg-opacity-25 border-secondary text-light" />
                 </div>
                 <div class="col-md-6">
                   <label class="form-label text-secondary small">Assign Staff Guide</label>
@@ -182,7 +408,7 @@
                 </div>
                 <div class="col-12">
                   <label class="form-label text-secondary small">Description</label>
-                  <textarea v-model="form.description" class="form-control bg-black bg-opacity-25 border-secondary text-light" rows="3" placeholder="Describe the trek, highlights, terrain, and what participants can expect..."></textarea>
+                  <textarea v-model="form.description" class="form-control bg-black bg-opacity-25 border-secondary text-light" rows="3" placeholder="Describe the trek route, highlights, terrain, and what participants can expect..."></textarea>
                 </div>
               </div>
             </div>
@@ -190,7 +416,7 @@
               <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
               <button type="submit" class="btn btn-glow px-4" :disabled="submitting">
                 <span v-if="submitting" class="spinner-border spinner-border-sm me-1" role="status"></span>
-                {{ isEdit ? 'Save Changes' : 'Create Trek' }}
+                {{ isEdit ? 'Save Changes' : 'Create Route' }}
               </button>
             </div>
           </form>
@@ -203,6 +429,8 @@
 
 <script>
 import { adminService } from '../../services/api';
+import { alertService } from '@/services/alert';
+import { confirmService } from '@/services/confirm';
 import DashboardLayout from '../../components/DashboardLayout.vue';
 import { Modal } from 'bootstrap';
 
@@ -229,10 +457,10 @@ export default {
         description: '',
         location: '',
         difficulty: 'Medium',
-        duration: 3,
         max_slots: 15,
         start_date: '',
         end_date: '',
+        booking_close_time: '',
         assigned_staff_id: null,
         status: 'Open'
       },
@@ -240,21 +468,32 @@ export default {
     };
   },
   computed: {
+    activeTreks() {
+      return this.treks.filter(t => t.status === 'Active');
+    },
+    openTreks() {
+      return this.treks.filter(t => t.status === 'Open');
+    },
+    pendingTreks() {
+      return this.treks.filter(t => t.status === 'Pending' || t.status === 'Closed');
+    },
+    completedCancelledTreks() {
+      return this.treks.filter(t => t.status === 'Completed' || t.status === 'Cancelled');
+    },
     calculatedDuration() {
-      if (!this.form.start_date || !this.form.end_date) return 0;
-      const start = new Date(this.form.start_date);
-      const end = new Date(this.form.end_date);
-      if (isNaN(start) || isNaN(end) || end < start) return 0;
-      // +1 so a single-day trek counts as 1 day
-      return Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      if (this.form.start_date && this.form.end_date) {
+        const start = new Date(this.form.start_date);
+        const end = new Date(this.form.end_date);
+        if (end >= start) {
+          const diffTime = Math.abs(end - start);
+          return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        }
+      }
+      return null;
     }
   },
   watch: {
-    calculatedDuration(val) {
-      this.form.duration = val > 0 ? val : this.form.duration;
-    },
     'form.start_date'(newVal) {
-      // If end date is before new start date, reset end date
       if (this.form.end_date && this.form.end_date < newVal) {
         this.form.end_date = '';
       }
@@ -284,71 +523,6 @@ export default {
         console.error('Failed to load staff options', err);
       }
     },
-    resetForm() {
-      this.form = {
-        name: '',
-        description: '',
-        location: '',
-        difficulty: 'Medium',
-        duration: 3,
-        max_slots: 15,
-        start_date: '',
-        end_date: '',
-        assigned_staff_id: null,
-        status: 'Open'
-      };
-    },
-    openCreateModal() {
-      this.isEdit = false;
-      this.resetForm();
-      this.modalInstance.show();
-    },
-    openEditModal(trek) {
-      this.isEdit = true;
-      this.currentTrekId = trek.id;
-      this.form = {
-        name: trek.name,
-        description: trek.description,
-        location: trek.location,
-        difficulty: trek.difficulty,
-        duration: trek.duration,
-        max_slots: trek.max_slots,
-        start_date: trek.start_date,
-        end_date: trek.end_date,
-        assigned_staff_id: trek.assigned_staff_id,
-        status: trek.status
-      };
-      this.modalInstance.show();
-    },
-    async saveTrek() {
-      this.submitting = true;
-      try {
-        if (this.isEdit) {
-          await adminService.updateTrek(this.currentTrekId, this.form);
-          alert('Trek updated successfully!');
-        } else {
-          await adminService.createTrek(this.form);
-          alert('Trek created successfully!');
-        }
-        this.modalInstance.hide();
-        this.fetchTreks();
-      } catch (err) {
-        alert(err.response?.data?.message || 'Error occurred while saving.');
-      } finally {
-        this.submitting = false;
-      }
-    },
-    async confirmDelete(trek) {
-      if (confirm(`Are you sure you want to permanently delete the trek "${trek.name}"?\nWarning: This will also cancel all associated bookings!`)) {
-        try {
-          await adminService.deleteTrek(trek.id);
-          alert('Trek deleted successfully!');
-          this.fetchTreks();
-        } catch (err) {
-          alert('Failed to delete trek.');
-        }
-      }
-    },
     getDifficultyClass(diff) {
       switch (diff) {
         case 'Easy': return 'border-success text-success';
@@ -367,19 +541,116 @@ export default {
         case 'Completed': return 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';
       }
+    },
+    formatDateTime(dateStr) {
+      if (!dateStr) return 'N/A';
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleString('en-GB', { 
+          timeZone: 'Asia/Kolkata', 
+          day: '2-digit',
+          month: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true
+        });
+      } catch (e) { return dateStr; }
+    },
+    resetForm() {
+      this.form = {
+        name: '',
+        description: '',
+        location: '',
+        difficulty: 'Medium',
+        max_slots: 15,
+        start_date: '',
+        end_date: '',
+        booking_close_time: '',
+        assigned_staff_id: null,
+        status: 'Open'
+      };
+    },
+    openCreateModal() {
+      this.isEdit = false;
+      this.resetForm();
+      this.modalInstance.show();
+    },
+    openEditModal(trek) {
+      this.isEdit = true;
+      this.currentTrekId = trek.id;
+      this.form = {
+        name: trek.name,
+        description: trek.description,
+        location: trek.location,
+        difficulty: trek.difficulty,
+        max_slots: trek.max_slots,
+        start_date: trek.start_date,
+        end_date: trek.end_date,
+        booking_close_time: trek.booking_close_time ? trek.booking_close_time.slice(0, 16) : '',
+        assigned_staff_id: trek.assigned_staff_id,
+        status: trek.status
+      };
+      this.modalInstance.show();
+    },
+    async saveTrek() {
+      this.submitting = true;
+      try {
+        if (this.isEdit) {
+          await adminService.updateTrek(this.currentTrekId, this.form);
+          alertService.success('Trek route updated successfully!');
+        } else {
+          await adminService.createTrek(this.form);
+          alertService.success('Trek route created successfully!');
+        }
+        this.modalInstance.hide();
+        this.fetchTreks();
+      } catch (err) {
+        alertService.error(err.response?.data?.message || 'Error occurred while saving.');
+      } finally {
+        this.submitting = false;
+      }
+    },
+    async confirmDelete(trek) {
+      const confirmed = await confirmService.ask(
+        `Are you sure you want to permanently delete the trekking route "${trek.name}"?\nWarning: This will also cancel all associated bookings!`,
+        { title: 'Delete Trekking Route', isDanger: true }
+      );
+      if (confirmed) {
+        try {
+          await adminService.deleteTrek(trek.id);
+          alertService.success('Trek route deleted successfully!');
+          this.fetchTreks();
+        } catch (err) {
+          alertService.error('Failed to delete trek.');
+        }
+      }
+    },
+    async closeBooking(trek) {
+      const confirmed = await confirmService.ask(
+        `Are you sure you want to close bookings manually for "${trek.name}"?`,
+        { title: 'Close Bookings', confirmText: 'Close Bookings', isDanger: true }
+      );
+      if (confirmed) {
+        try {
+          await adminService.closeBooking(trek.id);
+          alertService.success('Bookings closed successfully!');
+          this.fetchTreks();
+        } catch (err) {
+          alertService.error(err.response?.data?.message || 'Failed to close bookings.');
+        }
+      }
     }
   },
   mounted() {
     this.fetchTreks();
     this.fetchStaffOptions();
     
-    // Initialize bootstrap modal safely after DOM is ready
     this.$nextTick(() => {
       const modalEl = this.$refs.trekModal;
       if (modalEl) {
         this.modalInstance = new Modal(modalEl);
       }
-      // If query string has create=true, open modal immediately
       if (this.$route.query.create === 'true') {
         this.openCreateModal();
       }
@@ -400,9 +671,46 @@ export default {
 
 .text-line-clamp {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Gradients for section headers */
+.text-gradient-info {
+  background: linear-gradient(135deg, #00f2fe, #4facfe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-gradient-success {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-gradient-warning {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-gradient-secondary {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.section-group {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.1);
+}
+.section-group:last-child {
+  border-bottom: none;
 }
 </style>

@@ -21,7 +21,7 @@
       <!-- User Profile Card -->
       <div class="px-3 mb-4">
         <div class="user-card p-3 rounded-3 bg-black bg-opacity-25 border border-secondary border-opacity-10 d-flex align-items-center gap-3">
-          <div class="avatar bg-gradient text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center">
+          <div class="avatar bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
             {{ userInitial }}
           </div>
           <div class="overflow-hidden">
@@ -67,7 +67,7 @@
 
         <!-- Right: user initial + hamburger -->
         <div class="d-flex align-items-center gap-2">
-          <div class="avatar-sm bg-gradient text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center">
+          <div class="avatar-sm bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
             {{ userInitial }}
           </div>
           <button class="hamburger-btn" @click="drawerOpen = true" aria-label="Open menu">
@@ -188,7 +188,10 @@ export default {
       }
       if (this.role === 'staff') {
         return [
-          { path: '/staff/dashboard', label: 'Dashboard', icon: 'bi-grid-1x2-fill' }
+          { path: '/staff/dashboard', label: 'Dashboard', icon: 'bi-grid-1x2-fill' },
+          { path: '/staff/treks', label: 'My Treks', icon: 'bi-compass' },
+          { path: '/staff/participants', label: 'Participants', icon: 'bi-people' },
+          { path: '/staff/profile', label: 'Profile', icon: 'bi-person-circle' }
         ];
       }
       return [

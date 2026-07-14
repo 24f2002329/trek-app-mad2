@@ -168,7 +168,15 @@ export default {
       if (!dateStr) return 'N/A';
       try {
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleDateString('en-GB', { 
+          timeZone: 'Asia/Kolkata', 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true
+        });
       } catch (e) {
         return dateStr;
       }

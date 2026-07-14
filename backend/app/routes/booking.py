@@ -20,8 +20,14 @@ def create_booking():
         return jsonify({"message": "Trek ID is required"}), 400
         
     trek = Trek.query.get_or_404(trek_id)
-    if trek.status not in ["Open", "Approved", "Active"]:
+    if trek.status not in ["Open", "Approved"]:
         return jsonify({"message": "Trek is not open for bookings"}), 400
+        
+    import datetime as dt
+    if trek.booking_close_time:
+        close_time = trek.booking_close_time.replace(tzinfo=dt.timezone.utc) if trek.booking_close_time.tzinfo is None else trek.booking_close_time
+        if dt.datetime.now(dt.timezone.utc) > close_time:
+            return jsonify({"message": "Booking window for this trek has closed"}), 400
         
     if trek.available_slots < slots:
         return jsonify({"message": f"Only {trek.available_slots} slots left"}), 400

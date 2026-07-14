@@ -68,6 +68,17 @@ def get_all_treks():
     treks = query.all()
     result = []
     for t in treks:
+        booking_closed = False
+        if t.status not in ["Open", "Approved"]:
+            booking_closed = True
+        elif t.booking_close_time:
+            close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
+            if dt.datetime.now(dt.timezone.utc) > close_time:
+                booking_closed = True
+
+        latest_booking = Booking.query.filter_by(trek_id=t.id).filter(Booking.status != Booking.STATUS_CANCELLED).order_by(Booking.booking_date.desc()).first()
+        last_booking_time = latest_booking.booking_date.isoformat() if latest_booking else ""
+        
         result.append({
             "id": t.id,
             "name": t.name,
@@ -82,7 +93,10 @@ def get_all_treks():
             "end_date": t.end_date.isoformat() if t.end_date else "",
             "status": t.status,
             "assigned_staff_id": t.assigned_staff_id,
-            "assigned_staff_name": t.assigned_staff.name if t.assigned_staff else "Unassigned"
+            "assigned_staff_name": t.assigned_staff.name if t.assigned_staff else "Unassigned",
+            "last_booking_time": last_booking_time,
+            "booking_close_time": t.booking_close_time.isoformat() if t.booking_close_time else "",
+            "booking_closed": booking_closed
         })
     return jsonify(result)
 
@@ -95,12 +109,11 @@ def create_trek():
     name = data.get("name")
     location = data.get("location")
     difficulty = data.get("difficulty")
-    duration = data.get("duration")
     max_slots = data.get("max_slots")
     start_date_str = data.get("start_date")
     end_date_str = data.get("end_date")
     
-    if not all([name, location, difficulty, duration, max_slots, start_date_str, end_date_str]):
+    if not all([name, location, difficulty, max_slots, start_date_str, end_date_str]):
         return jsonify({"message": "Missing required fields"}), 400
         
     try:
@@ -109,6 +122,25 @@ def create_trek():
     except ValueError:
         return jsonify({"message": "Invalid date format, use YYYY-MM-DD"}), 400
         
+    duration = (end_date - start_date).days + 1
+    if duration <= 0:
+        return jsonify({"message": "End date must be on or after start date"}), 400
+        
+    booking_close_time = None
+    booking_close_time_str = data.get("booking_close_time")
+    if booking_close_time_str:
+        try:
+            clean_str = booking_close_time_str.split(".")[0].replace("Z", "")
+            if "T" in clean_str:
+                if len(clean_str.split("T")[1].split(":")) == 2:
+                    booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M")
+                else:
+                    booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+            else:
+                booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"message": "Invalid booking_close_time format"}), 400
+            
     assigned_staff_id = data.get("assigned_staff_id")
     if assigned_staff_id:
         staff_user = User.query.filter_by(id=assigned_staff_id, role=User.ROLE_STAFF).first()
@@ -120,12 +152,13 @@ def create_trek():
         description=data.get("description", ""),
         location=location,
         difficulty=difficulty,
-        duration=int(duration),
+        duration=duration,
         max_slots=int(max_slots),
         start_date=start_date,
         end_date=end_date,
         status=data.get("status", "Pending"),
-        assigned_staff_id=assigned_staff_id
+        assigned_staff_id=assigned_staff_id,
+        booking_close_time=booking_close_time
     )
     
     try:
@@ -148,7 +181,6 @@ def update_trek(trek_id):
     if "description" in data: t.description = data["description"]
     if "location" in data: t.location = data["location"]
     if "difficulty" in data: t.difficulty = data["difficulty"]
-    if "duration" in data: t.duration = int(data["duration"])
     if "max_slots" in data: t.max_slots = int(data["max_slots"])
     if "status" in data: t.status = data["status"]
     
@@ -164,6 +196,29 @@ def update_trek(trek_id):
         except ValueError:
             return jsonify({"message": "Invalid end_date format, use YYYY-MM-DD"}), 400
             
+    # Auto recalculate duration
+    if t.start_date and t.end_date:
+        t.duration = (t.end_date - t.start_date).days + 1
+        if t.duration <= 0:
+            return jsonify({"message": "End date must be on or after start date"}), 400
+            
+    if "booking_close_time" in data:
+        booking_close_time_str = data["booking_close_time"]
+        if not booking_close_time_str:
+            t.booking_close_time = None
+        else:
+            try:
+                clean_str = booking_close_time_str.split(".")[0].replace("Z", "")
+                if "T" in clean_str:
+                    if len(clean_str.split("T")[1].split(":")) == 2:
+                        t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M")
+                    else:
+                        t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+                else:
+                    t.booking_close_time = dt.datetime.strptime(clean_str, "%Y-%m-%d")
+            except ValueError:
+                return jsonify({"message": "Invalid booking_close_time format"}), 400
+                
     if "assigned_staff_id" in data:
         staff_id = data["assigned_staff_id"]
         if staff_id:
@@ -222,7 +277,6 @@ def get_all_staff():
             "email": s.email,
             "is_active": s.is_active,
             "contact": p.contact if p else "",
-            "status": p.status if p else "Pending",
             "experience_years": p.experience_years if p else 0,
             "skills": p.skills if p else "",
             "bio": p.bio if p else ""
@@ -261,7 +315,6 @@ def create_staff():
         profile = StaffProfile(
             user_id=staff_user.id,
             contact=data.get("contact", ""),
-            status=data.get("status", "Approved"),
             experience_years=int(data.get("experience_years", 0)),
             skills=data.get("skills", ""),
             bio=data.get("bio", "")
@@ -298,7 +351,6 @@ def update_staff(staff_id):
         db.session.add(p)
         
     if "contact" in data: p.contact = data["contact"]
-    if "status" in data: p.status = data["status"]
     if "experience_years" in data: p.experience_years = int(data["experience_years"])
     if "skills" in data: p.skills = data["skills"]
     if "bio" in data: p.bio = data["bio"]

@@ -7,7 +7,6 @@ class StaffProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
     contact = db.Column(db.String(20))
-    status = db.Column(db.String(20), default="Pending")
     experience_years = db.Column(db.Integer, default=0)
     skills = db.Column(db.String(255))
     bio = db.Column(db.Text)

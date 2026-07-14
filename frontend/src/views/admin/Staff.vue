@@ -60,7 +60,6 @@
               <div class="d-flex flex-wrap gap-2 mb-3">
                 <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50"><i class="bi bi-telephone"></i> {{ staff.contact || 'No Contact' }}</span>
                 <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50"><i class="bi bi-star"></i> {{ staff.experience_years }} Yrs Exp</span>
-                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-10">{{ staff.status }}</span>
               </div>
             </div>
           </div>
@@ -115,19 +114,11 @@
                   <label class="form-label text-secondary small">Contact Phone</label>
                   <input v-model="form.contact" type="text" class="form-control bg-black bg-opacity-25 border-secondary text-light" placeholder="e.g. 9876543210" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                   <label class="form-label text-secondary small">Experience (Years)</label>
                   <input v-model.number="form.experience_years" type="number" min="0" class="form-control bg-black bg-opacity-25 border-secondary text-light" placeholder="0" />
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label text-secondary small">Profile Status</label>
-                  <select v-model="form.status" class="form-select bg-black bg-opacity-25 border-secondary text-light">
-                    <option value="Approved">Approved</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Suspended">Suspended</option>
-                  </select>
-                </div>
-                <div class="col-md-4" v-if="isEdit">
+                <div class="col-md-6" v-if="isEdit">
                   <label class="form-label text-secondary small">Account Status</label>
                   <select v-model="form.is_active" class="form-select bg-black bg-opacity-25 border-secondary text-light">
                     <option :value="true">Active / Unlocked</option>
@@ -161,6 +152,8 @@
 
 <script>
 import { adminService } from '../../services/api';
+import { alertService } from '@/services/alert';
+import { confirmService } from '@/services/confirm';
 import DashboardLayout from '../../components/DashboardLayout.vue';
 import { Modal } from 'bootstrap';
 
@@ -185,7 +178,6 @@ export default {
         password: '',
         contact: '',
         experience_years: 0,
-        status: 'Approved',
         skills: '',
         bio: '',
         is_active: true
@@ -212,7 +204,6 @@ export default {
         password: '',
         contact: '',
         experience_years: 0,
-        status: 'Approved',
         skills: '',
         bio: '',
         is_active: true
@@ -232,7 +223,6 @@ export default {
         password: '',
         contact: staff.contact,
         experience_years: staff.experience_years,
-        status: staff.status,
         skills: staff.skills,
         bio: staff.bio,
         is_active: staff.is_active
@@ -244,15 +234,15 @@ export default {
       try {
         if (this.isEdit) {
           await adminService.updateStaff(this.currentStaffId, this.form);
-          alert('Staff profile updated successfully!');
+          alertService.success('Staff profile updated successfully!');
         } else {
           await adminService.createStaff(this.form);
-          alert('Staff member registered successfully!');
+          alertService.success('Staff member registered successfully!');
         }
         this.modalInstance.hide();
         this.fetchStaff();
       } catch (err) {
-        alert(err.response?.data?.message || 'Error occurred while saving staff details.');
+        alertService.error(err.response?.data?.message || 'Error occurred while saving staff details.');
       } finally {
         this.submitting = false;
       }
@@ -262,13 +252,18 @@ export default {
         ? `Are you sure you want to deactivate/blacklist guide "${staff.name}"?\nThey will be blocked from logging in immediately.`
         : `Unlock and activate guide "${staff.name}"?`;
       
-      if (confirm(confirmMsg)) {
+      const confirmed = await confirmService.ask(confirmMsg, {
+        title: staff.is_active ? 'Deactivate Guide' : 'Activate Guide',
+        isDanger: staff.is_active
+      });
+      
+      if (confirmed) {
         try {
           await adminService.toggleStaffStatus(staff.id, !staff.is_active);
-          alert('Status updated successfully!');
+          alertService.success('Status updated successfully!');
           this.fetchStaff();
         } catch (err) {
-          alert('Failed to update status.');
+          alertService.error('Failed to update status.');
         }
       }
     }

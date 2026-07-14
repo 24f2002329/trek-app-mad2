@@ -157,7 +157,7 @@
 
           <div class="d-flex justify-content-between align-items-start mb-4">
             <div class="d-flex align-items-center gap-3">
-              <div class="avatar-lg bg-gradient text-dark fw-bold rounded-circle d-flex align-items-center justify-content-center">
+              <div class="avatar-lg bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
                 {{ detailUser.name.charAt(0).toUpperCase() }}
               </div>
               <div>
@@ -203,6 +203,8 @@
 
 <script>
 import { adminService } from '../../services/api';
+import { alertService } from '@/services/alert';
+import { confirmService } from '@/services/confirm';
 import DashboardLayout from '../../components/DashboardLayout.vue';
 
 export default {
@@ -256,18 +258,25 @@ export default {
     formatDate(dateStr) {
       if (!dateStr) return 'N/A';
       try {
-        return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return new Date(dateStr).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
       } catch { return dateStr; }
     },
     async toggleUserStatus(user) {
       const msg = user.is_active
         ? `Deactivate / blacklist "${user.name}"? They will be blocked from logging in.`
         : `Unlock and activate account for "${user.name}"?`;
-      if (confirm(msg)) {
+      
+      const confirmed = await confirmService.ask(msg, {
+        title: user.is_active ? 'Block Account' : 'Unlock Account',
+        isDanger: user.is_active
+      });
+      
+      if (confirmed) {
         try {
           await adminService.toggleUserStatus(user.id, !user.is_active);
           await this.fetchUsers();
-        } catch { alert('Failed to update status.'); }
+          alertService.success('Status updated successfully!');
+        } catch { alertService.error('Failed to update status.'); }
       }
     }
   },

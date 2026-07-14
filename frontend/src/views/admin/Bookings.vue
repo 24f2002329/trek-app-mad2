@@ -219,6 +219,7 @@
 
 <script>
 import { adminService } from '../../services/api';
+import { alertService } from '@/services/alert';
 import DashboardLayout from '../../components/DashboardLayout.vue';
 
 export default {
@@ -274,12 +275,14 @@ export default {
       if (!dateStr) return 'N/A';
       try {
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric', 
+        return d.toLocaleDateString('en-GB', { 
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit', 
+          month: '2-digit', 
           year: 'numeric', 
           hour: '2-digit', 
-          minute: '2-digit' 
+          minute: '2-digit',
+          hour12: true
         });
       } catch (e) {
         return dateStr;
@@ -288,10 +291,10 @@ export default {
     async updateStatus(bookingId, status) {
       try {
         await adminService.updateBookingStatus(bookingId, status);
-        alert('Booking status updated successfully!');
+        alertService.success('Booking status updated successfully!');
         this.fetchBookings();
       } catch (err) {
-        alert(err.response?.data?.message || 'Failed to update booking status.');
+        alertService.error(err.response?.data?.message || 'Failed to update booking status.');
         this.fetchBookings();
       }
     },
