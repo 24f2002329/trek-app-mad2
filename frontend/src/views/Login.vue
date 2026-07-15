@@ -7,12 +7,20 @@
         <p class="text-secondary small">Access your TrekSphere account</p>
       </div>
 
-      <!-- Alert -->
+      <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-20 text-info p-3 mb-4 rounded-3" style="font-size: 0.82rem; line-height: 1.55;">
+        <div class="d-flex align-items-center mb-2 fw-bold text-light">
+          <i class="bi bi-info-circle-fill me-2 text-info"></i> Demo Accounts
+        </div>
+        <div class="mb-1"><strong>Admin:</strong> <code>admin@trek.com</code> / <code>admin123</code></div>
+        <div class="mb-1"><strong>Staff:</strong> <code>aarav@trek.com</code> / <code>staff123</code></div>
+        <div><strong>Trekker:</strong> <code>rahul.sharma@trek.com</code> / <code>password123</code></div>
+      </div>
+
       <div v-if="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger small py-2 px-3 mb-4 rounded-3" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
       </div>
 
-      <!-- Form -->
+
       <form @submit.prevent="handleLogin">
         <div class="mb-3">
           <label for="email" class="form-label text-secondary small fw-bold">Email Address</label>

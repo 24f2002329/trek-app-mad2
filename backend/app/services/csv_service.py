@@ -2,13 +2,9 @@ import csv
 import io
 
 def generate_bookings_csv(bookings):
-    """
-    Generates CSV content for a list of booking models.
-    """
     output = io.StringIO()
     writer = csv.writer(output)
     
-    # Write header
     writer.writerow([
         "Booking ID", 
         "Trek Name", 
@@ -20,7 +16,6 @@ def generate_bookings_csv(bookings):
         "Status"
     ])
     
-    # Write rows
     for b in bookings:
         writer.writerow([
             b.id,

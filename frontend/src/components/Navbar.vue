@@ -3,6 +3,9 @@
     <div class="container">
       <router-link class="navbar-brand d-flex align-items-center fw-bold fs-4 text-gradient" to="/">
         <img src="../assets/images/logo.png" alt="Logo" class="me-2" style="height: 32px; width: auto;" /> TrekSphere
+        <span class="ms-2 d-inline-block rounded-circle status-dot" :class="isOffline ? 'bg-danger text-danger' 
+          : 'bg-success text-success'" style="width: 8px; height: 8px; margin-top: 4px;" :title="isOffline ? 'System Offline' : 'System Online'">
+        </span>
       </router-link>
       
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,14 +52,15 @@
 </template>
 
 <script>
-import { authService } from '../services/api';
+import { authService, publicService } from '../services/api';
 
 export default {
   name: 'Navbar',
   data() {
     return {
       isLoggedIn: false,
-      user: null
+      user: null,
+      isOffline: false
     };
   },
   computed: {
@@ -82,14 +86,24 @@ export default {
       authService.logout();
       this.checkAuth();
       this.$router.push('/');
+    },
+    async checkSystemStatus() {
+      try {
+        const data = await publicService.getSystemStatus();
+        this.isOffline = data.status !== 'online';
+      } catch (err) {
+        this.isOffline = true;
+      }
     }
   },
   mounted() {
     this.checkAuth();
+    this.checkSystemStatus();
     this.$watch(
       () => this.$route.path,
       () => {
         this.checkAuth();
+        this.checkSystemStatus();
       }
     );
   }
@@ -102,5 +116,14 @@ export default {
 }
 .router-link-exact-active {
   color: #00f2fe !important;
+}
+.status-dot {
+  box-shadow: 0 0 8px currentColor;
+  animation: blink 2.5s infinite ease-in-out;
+}
+@keyframes blink {
+  0% { opacity: 0.45; }
+  50% { opacity: 1; }
+  100% { opacity: 0.45; }
 }
 </style>

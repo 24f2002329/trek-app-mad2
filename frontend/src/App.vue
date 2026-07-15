@@ -16,7 +16,10 @@
     <!-- Show footer only on non-dashboard routes -->
     <footer v-if="!isDashboardRoute" class="py-4 text-center border-top border-secondary border-opacity-20 text-secondary z-1 mt-auto">
       <div class="container">
-        <small>&copy; 2026 Trekking Management Application V2. All rights reserved  <br> Made with <i class="bi bi-heart-fill text-danger mx-1"></i> by Devendra.</small>
+        <h5 class="text-light mb-1 h6">TrekSphere</h5>
+        <p class="mb-1 text-secondary small">MAD-2 Course Project</p>
+        <p class="mb-1 text-secondary small">Developed by <strong>Devendra Chouhan</strong></p>
+        <p class="mb-0 text-secondary small">BS in Data Science and Applications | IIT Madras</p>
       </div>
     </footer>
   </div>
@@ -43,9 +46,7 @@ export default {
 </script>
 
 <style>
-/* Custom transitions for route swapping */
-.fade-enter-active,
-.fade-leave-active {
+.fade-enter-active, .fade-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 

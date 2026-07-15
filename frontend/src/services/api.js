@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '', // Proxied automatically by Vite to Flask backend or configured custom base URL
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',       // proxied automatically by Vite to flask backend or configured custom base URL
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
 
-// Attach JWT token to requests if present in localStorage
+// attach jwt token to requests if present in localstorage
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -22,14 +22,14 @@ api.interceptors.request.use(
   }
 );
 
-// Intercept unauthorized responses to force log out
+// intercept unauthorized responses to force log out
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // If we aren't already on login, send the user there
+      // if we aren't already on login, send the user there
       if (window.location.pathname !== '/login' && window.location.pathname !== '/' && window.location.pathname !== '/treks') {
         window.location.href = '/login';
       }
@@ -80,12 +80,20 @@ export const publicService = {
   async getTrekDetail(id) {
     const response = await api.get(`/api/public/treks/${id}`);
     return response.data;
+  },
+  async getSystemStatus() {
+    const response = await api.get('/api/public/system-status');
+    return response.data;
   }
 };
 
 export const adminService = {
   async getDashboardSummary() {
     const response = await api.get('/api/admin/dashboard-summary');
+    return response.data;
+  },
+  async getSystemStatus() {
+    const response = await api.get('/api/admin/system-status');
     return response.data;
   },
   async getTreks(params) {
@@ -143,6 +151,14 @@ export const adminService = {
   async getReportStats() {
     const response = await api.get('/api/admin/reports/stats');
     return response.data;
+  },
+  async getUserDetail(userId) {
+    const response = await api.get(`/api/admin/users/${userId}`);
+    return response.data;
+  },
+  async updateUserDetail(userId, data) {
+    const response = await api.put(`/api/admin/users/${userId}`, data);
+    return response.data;
   }
 };
 
@@ -175,6 +191,10 @@ export const staffService = {
   async updateProfile(data) {
     const response = await api.put('/api/staff/profile', data);
     return response.data;
+  },
+  async getSystemStatus() {
+    const response = await api.get('/api/staff/system-status');
+    return response.data;
   }
 };
 
@@ -201,6 +221,10 @@ export const userService = {
   },
   async triggerCSVExport() {
     const response = await api.post('/api/user/export-history');
+    return response.data;
+  },
+  async triggerBookingsCSVExport() {
+    const response = await api.post('/api/user/export-bookings');
     return response.data;
   },
   async getExportStatus(taskId) {

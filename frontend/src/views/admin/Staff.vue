@@ -1,6 +1,5 @@
 <template>
   <DashboardLayout role="admin">
-    <!-- Header & Register Trigger -->
     <div class="row align-items-center mb-5">
       <div class="col-md-6 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">Manage <span class="text-gradient">Staff Guides</span></h1>
@@ -13,7 +12,7 @@
       </div>
     </div>
 
-    <!-- Search bar -->
+ 
     <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 mb-4 shadow">
       <div class="row g-3">
         <div class="col-12">
@@ -31,7 +30,7 @@
       </div>
     </div>
 
-    <!-- Staff List -->
+
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-info" role="status"></div>
     </div>
@@ -84,7 +83,7 @@
       </div>
     </div>
 
-    <!-- Bootstrap Modal for Register/Edit (Teleported to body to avoid stacking context issues) -->
+
     <Teleport to="body">
     <div class="modal fade" id="staffModal" tabindex="-1" aria-hidden="true" ref="staffModal">
       <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -271,13 +270,12 @@ export default {
   mounted() {
     this.fetchStaff();
     
-    // Initialize bootstrap modal safely after DOM is ready
     this.$nextTick(() => {
       const modalEl = this.$refs.staffModal;
       if (modalEl) {
         this.modalInstance = new Modal(modalEl);
       }
-      // If query string has create=true, open modal immediately
+
       if (this.$route.query.create === 'true') {
         this.openCreateModal();
       }

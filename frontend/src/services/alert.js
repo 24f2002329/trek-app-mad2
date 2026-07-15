@@ -1,7 +1,7 @@
 import { reactive } from 'vue';
 
 export const alertState = reactive({
-  alerts: [] // array of { id, message, type: 'success'|'danger'|'info'|'warning', duration }
+  alerts: []
 });
 
 let alertId = 0;

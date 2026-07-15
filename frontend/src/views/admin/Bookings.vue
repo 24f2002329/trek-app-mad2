@@ -1,6 +1,5 @@
 <template>
   <DashboardLayout role="admin">
-    <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">Manage <span class="text-gradient">Bookings</span></h1>
@@ -8,7 +7,7 @@
       </div>
     </div>
 
-    <!-- Search & Filters -->
+
     <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 mb-4 shadow">
       <div class="row g-3">
         <div class="col-md-8">
@@ -34,7 +33,7 @@
       </div>
     </div>
 
-    <!-- Bookings Table Card -->
+
     <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4">
       <div v-if="loading" class="text-center py-5">
         <div class="spinner-border text-info" role="status"></div>
@@ -46,7 +45,7 @@
       </div>
 
       <template v-else>
-        <!-- ── DESKTOP TABLE (md+) ── -->
+        <!-- DESKTOP TABLE -->
         <div class="d-none d-md-block table-responsive">
           <table class="table table-dark table-hover border-secondary border-opacity-10 align-middle">
             <thead>
@@ -94,7 +93,7 @@
           </table>
         </div>
 
-        <!-- ── MOBILE TABLE (< md): 3 columns + View Button ── -->
+        <!-- MOBILE TABLE -->
         <div class="d-md-none table-responsive">
           <table class="table table-dark table-sm border-secondary border-opacity-10 align-middle">
             <thead>
@@ -124,7 +123,7 @@
           </table>
         </div>
 
-        <!-- ── PAGINATION ── -->
+        <!-- PAGINATION -->
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 pt-3 border-top border-secondary border-opacity-10">
           <small class="text-secondary">
             Showing {{ (currentPage - 1) * perPage + 1 }}–{{ Math.min(currentPage * perPage, bookings.length) }}
@@ -137,10 +136,11 @@
                   <i class="bi bi-chevron-left"></i>
                 </button>
               </li>
-              <li v-for="p in totalPages" :key="p" class="page-item" :class="{ active: p === currentPage }">
+              <li v-for="(p, idx) in visiblePages" :key="idx" class="page-item" :class="{ active: p === currentPage, disabled: p === '...' }">
                 <button class="page-link bg-dark border-secondary text-white rounded-3"
                   :class="{ 'bg-info border-info text-dark': p === currentPage }"
-                  @click="currentPage = p">{{ p }}</button>
+                  :disabled="p === '...'"
+                  @click="p !== '...' && (currentPage = p)">{{ p }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
                 <button class="page-link bg-dark border-secondary text-white rounded-3" @click="currentPage++">
@@ -153,7 +153,7 @@
       </template>
     </div>
 
-    <!-- ── MOBILE DETAIL BOTTOM-SHEET MODAL ── -->
+
     <Teleport to="body">
       <div v-if="detailBooking" class="detail-backdrop" @click.self="detailBooking = null">
         <div class="detail-sheet">
@@ -244,6 +244,44 @@ export default {
     paginated() {
       const start = (this.currentPage - 1) * this.perPage;
       return this.bookings.slice(start, start + this.perPage);
+    },
+    visiblePages() {
+      const range = [];
+      const total = this.totalPages;
+      const current = this.currentPage;
+      
+      if (total <= 7) {
+        for (let i = 1; i <= total; i++) {
+          range.push(i);
+        }
+        return range;
+      }
+      
+      range.push(1);
+      
+      let start = Math.max(2, current - 1);
+      let end = Math.min(total - 1, current + 1);
+      
+      if (current <= 3) {
+        end = 4;
+      } else if (current >= total - 2) {
+        start = total - 3;
+      }
+      
+      if (start > 2) {
+        range.push('...');
+      }
+      
+      for (let i = start; i <= end; i++) {
+        range.push(i);
+      }
+      
+      if (end < total - 1) {
+        range.push('...');
+      }
+      
+      range.push(total);
+      return range;
     }
   },
   methods: {
@@ -316,7 +354,7 @@ export default {
   text-align: center;
 }
 
-/* Detail bottom-sheet modal */
+
 .detail-backdrop {
   position: fixed;
   inset: 0;

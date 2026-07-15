@@ -1,6 +1,5 @@
 <template>
   <DashboardLayout role="staff">
-    <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">Trek <span class="text-gradient">Participants</span></h1>
@@ -8,7 +7,6 @@
       </div>
     </div>
 
-    <!-- Search/Filters -->
     <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 mb-4 shadow">
       <div class="row g-3">
         <div class="col-md-8">
@@ -46,7 +44,7 @@
       </div>
 
       <template v-else>
-        <!-- ── DESKTOP TABLE (md+) ── -->
+        <!-- DESKTOP TABLE -->
         <div class="d-none d-md-block table-responsive">
           <table class="table table-dark table-hover border-secondary border-opacity-10 align-middle">
             <thead>
@@ -56,7 +54,7 @@
                 <th class="text-secondary border-secondary text-center">Slots Booked</th>
                 <th class="text-secondary border-secondary">Booking Date</th>
                 <th class="text-secondary border-secondary text-center">Status</th>
-                <th class="text-secondary border-secondary text-end">Action</th>
+                <th class="text-secondary border-secondary text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -76,6 +74,9 @@
                   <span class="badge" :class="getStatusClass(p.status)">{{ p.status }}</span>
                 </td>
                 <td class="border-secondary border-opacity-10 text-end">
+                  <button @click="openDetail(p)" class="btn btn-outline-info btn-sm rounded-3 px-3 py-1 me-2">
+                    <i class="bi bi-eye me-1"></i>Details
+                  </button>
                   <select 
                     :value="p.status" 
                     @change="updateBookingStatus(p.booking_id, $event.target.value)" 
@@ -91,7 +92,7 @@
           </table>
         </div>
 
-        <!-- ── MOBILE TABLE (< md): 3 columns + View button ── -->
+        <!-- MOBILE TABLE -->
         <div class="d-md-none table-responsive">
           <table class="table table-dark table-sm border-secondary border-opacity-10 align-middle">
             <thead>
@@ -120,7 +121,7 @@
           </table>
         </div>
 
-        <!-- ── PAGINATION (Show only if rows > 10) ── -->
+        <!-- PAGINATION -->
         <div v-if="filteredParticipants.length > perPage" class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 pt-3 border-top border-secondary border-opacity-10">
           <small class="text-secondary">
             Showing {{ (currentPage - 1) * perPage + 1 }}–{{ Math.min(currentPage * perPage, filteredParticipants.length) }}
@@ -133,10 +134,11 @@
                   <i class="bi bi-chevron-left"></i>
                 </button>
               </li>
-              <li v-for="pageNum in totalPages" :key="pageNum" class="page-item" :class="{ active: pageNum === currentPage }">
+              <li v-for="(pageNum, idx) in visiblePages" :key="idx" class="page-item" :class="{ active: pageNum === currentPage, disabled: pageNum === '...' }">
                 <button class="page-link border-secondary rounded-3"
                   :class="{ 'active-page': pageNum === currentPage }"
-                  @click="currentPage = pageNum">{{ pageNum }}</button>
+                  :disabled="pageNum === '...'"
+                  @click="pageNum !== '...' && (currentPage = pageNum)">{{ pageNum }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
                 <button class="page-link border-secondary rounded-3" @click="currentPage++">
@@ -149,7 +151,7 @@
       </template>
     </div>
 
-    <!-- ── MOBILE DETAIL BOTTOM-SHEET MODAL ── -->
+    <!-- PARTICIPANT DETAIL MODAL -->
     <Teleport to="body">
       <div v-if="detailParticipant" class="detail-backdrop" @click.self="detailParticipant = null">
         <div class="detail-sheet">
@@ -164,7 +166,7 @@
             <button class="btn-icon-close" @click="detailParticipant = null"><i class="bi bi-x-lg text-secondary"></i></button>
           </div>
 
-          <div class="list-group list-group-flush mb-4">
+          <div class="list-group list-group-flush mb-4 scrollable-details">
             <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2">
               <span class="text-secondary small d-block mb-1">Trekker Name</span>
               <span class="text-light fw-bold">{{ detailParticipant.trekker_name }}</span>
@@ -172,6 +174,27 @@
             <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2">
               <span class="text-secondary small d-block mb-1">Trekker Email</span>
               <span class="text-light text-break">{{ detailParticipant.email }}</span>
+            </div>
+            <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2">
+              <span class="text-secondary small d-block mb-1">Contact Number</span>
+              <span class="text-light fw-bold">{{ detailParticipant.phone || 'N/A' }}</span>
+            </div>
+            <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2 d-flex justify-content-between align-items-center">
+              <span class="text-secondary small">Blood Group</span>
+              <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 px-3 py-1">{{ detailParticipant.blood_group || 'N/A' }}</span>
+            </div>
+            <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2">
+              <span class="text-secondary small d-block mb-1">Emergency Contact</span>
+              <span class="text-light fw-bold">{{ detailParticipant.emergency_contact_name || 'N/A' }}</span>
+              <span v-if="detailParticipant.emergency_contact_phone" class="text-secondary small d-block mt-1">
+                <i class="bi bi-telephone-fill me-1 text-secondary"></i>{{ detailParticipant.emergency_contact_phone }}
+              </span>
+            </div>
+            <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2">
+              <span class="text-secondary small d-block mb-1">Medical Conditions & Allergies</span>
+              <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 d-inline-block text-wrap text-start w-100 p-2 fw-normal" style="line-height: 1.4;">
+                <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>{{ detailParticipant.medical_conditions || 'None Reported' }}
+              </span>
             </div>
             <div class="list-group-item bg-transparent border-secondary border-opacity-15 px-0 py-2">
               <span class="text-secondary small d-block mb-1">Assigned Trek Route</span>
@@ -233,10 +256,10 @@ export default {
   computed: {
     filteredParticipants() {
       return this.participants.filter(p => {
-        // Status filter
+  
         if (this.statusFilter && p.status !== this.statusFilter) return false;
         
-        // Search filter
+
         if (this.searchQuery) {
           const q = this.searchQuery.toLowerCase();
           return (
@@ -254,6 +277,44 @@ export default {
     paginated() {
       const start = (this.currentPage - 1) * this.perPage;
       return this.filteredParticipants.slice(start, start + this.perPage);
+    },
+    visiblePages() {
+      const range = [];
+      const total = this.totalPages;
+      const current = this.currentPage;
+      
+      if (total <= 7) {
+        for (let i = 1; i <= total; i++) {
+          range.push(i);
+        }
+        return range;
+      }
+      
+      range.push(1);
+      
+      let start = Math.max(2, current - 1);
+      let end = Math.min(total - 1, current + 1);
+      
+      if (current <= 3) {
+        end = 4;
+      } else if (current >= total - 2) {
+        start = total - 3;
+      }
+      
+      if (start > 2) {
+        range.push('...');
+      }
+      
+      for (let i = start; i <= end; i++) {
+        range.push(i);
+      }
+      
+      if (end < total - 1) {
+        range.push('...');
+      }
+      
+      range.push(total);
+      return range;
     }
   },
   methods: {
@@ -332,7 +393,7 @@ export default {
   font-weight: 700;
 }
 
-/* Detail bottom-sheet modal */
+
 .detail-backdrop {
   position: fixed;
   inset: 0;
@@ -351,6 +412,15 @@ export default {
   border-radius: 20px 20px 0 0;
   padding: 16px 20px 32px;
   animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.scrollable-details {
+  overflow-y: auto;
+  flex: 1;
+  margin-bottom: 1rem;
 }
 
 .sheet-handle {
@@ -366,11 +436,27 @@ export default {
   to { transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .btn-icon-close {
   background: none;
   border: none;
   padding: 6px;
   border-radius: 8px;
   cursor: pointer;
+}
+
+@media (min-width: 576px) {
+  .detail-backdrop {
+    align-items: center !important;
+  }
+  .detail-sheet {
+    border-radius: 20px !important;
+    padding: 24px !important;
+    animation: fadeIn 0.25s ease-out !important;
+  }
 }
 </style>

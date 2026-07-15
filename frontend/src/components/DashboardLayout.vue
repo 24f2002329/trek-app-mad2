@@ -1,14 +1,14 @@
 <template>
   <div class="dashboard-wrapper d-flex flex-column flex-md-row">
-    <!-- ============ DESKTOP SIDEBAR (md+) ============ -->
+    <!-- DESKTOP SIDEBAR -->
     <aside class="sidebar d-none d-md-flex flex-column py-4">
       <div class="sidebar-header px-4 mb-4">
-        <!-- Brand -->
+        
         <router-link to="/" class="d-flex align-items-center gap-2 text-decoration-none mb-4 pb-3 border-bottom border-secondary border-opacity-20">
           <img src="../assets/images/logo.png" alt="Logo" style="height: 28px; width: auto;" />
           <span class="fw-bold fs-5 text-gradient">TrekSphere</span>
         </router-link>
-        <!-- Role Badge -->
+        
         <div class="d-flex align-items-center gap-2">
           <i class="bi fs-5 text-gradient" :class="roleIcon"></i>
           <div>
@@ -18,7 +18,7 @@
         </div>
       </div>
 
-      <!-- User Profile Card -->
+      <!-- User profile card -->
       <div class="px-3 mb-4">
         <div class="user-card p-3 rounded-3 bg-black bg-opacity-25 border border-secondary border-opacity-10 d-flex align-items-center gap-3">
           <div class="avatar bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
@@ -31,7 +31,7 @@
         </div>
       </div>
 
-      <!-- Navigation Links -->
+ 
       <nav class="flex-grow-1 px-3 d-flex flex-column gap-2">
         <router-link
           v-for="item in navItems"
@@ -45,7 +45,7 @@
         </router-link>
       </nav>
 
-      <!-- Sidebar Footer (Logout) -->
+
       <div class="px-3 mt-auto pt-3 border-top border-secondary border-opacity-10">
         <button @click="logout" class="btn btn-outline-danger w-100 py-2 d-flex align-items-center justify-content-center gap-2 rounded-3 border-opacity-20">
           <i class="bi bi-box-arrow-right"></i>
@@ -54,15 +54,15 @@
       </div>
     </aside>
 
-    <!-- ============ MOBILE HEADERNavbar (< md) ============ -->
+    <!-- MOBILE HEADER NAVBAR -->
     <header class="mobile-topbar d-flex d-md-none align-items-center justify-content-between px-3">
-      <!-- Brand -->
+
       <router-link to="/" class="d-flex align-items-center gap-2 text-decoration-none">
         <img src="../assets/images/logo.png" alt="Logo" style="height: 24px; width: auto;" />
         <span class="fw-bold text-gradient">TrekSphere</span>
       </router-link>
 
-      <!-- Right: user initial + hamburger -->
+
       <div class="d-flex align-items-center gap-2">
         <div class="avatar-sm bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
           {{ userInitial }}
@@ -73,17 +73,14 @@
       </div>
     </header>
 
-    <!-- ============ SLIDE-IN DRAWER (mobile) ============ -->
+
     <Teleport to="body">
-      <!-- Backdrop -->
       <transition name="fade-backdrop">
         <div v-if="drawerOpen" class="drawer-backdrop" @click="drawerOpen = false"></div>
       </transition>
-
-      <!-- Drawer Panel -->
       <transition name="slide-drawer">
         <div v-if="drawerOpen" class="drawer-panel d-flex flex-column py-4 px-3">
-          <!-- Drawer Header -->
+        
           <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom border-secondary border-opacity-20">
             <div class="d-flex align-items-center gap-2">
               <i class="bi fs-5 text-gradient" :class="roleIcon"></i>
@@ -97,7 +94,7 @@
             </button>
           </div>
 
-          <!-- Nav Links -->
+
           <nav class="d-flex flex-column gap-1 flex-grow-1">
             <router-link
               v-for="item in navItems"
@@ -112,7 +109,7 @@
             </router-link>
           </nav>
 
-          <!-- Drawer Logout -->
+
           <div class="mt-auto pt-3 border-top border-secondary border-opacity-10">
             <button @click="logout" class="btn btn-outline-danger w-100 py-2 d-flex align-items-center justify-content-center gap-2 rounded-3">
               <i class="bi bi-box-arrow-right"></i>
@@ -123,7 +120,7 @@
       </transition>
     </Teleport>
 
-    <!-- ============ MAIN CONTENT AREA ============ -->
+    <!-- MAIN CONTENT AREA -->
     <div class="dashboard-content flex-grow-1">
       <div class="content-inner p-3 p-md-5">
         <slot></slot>
@@ -193,11 +190,10 @@ export default {
     }
   },
   watch: {
-    // Close drawer on route change
+    // close drawer on route change
     '$route'() {
       this.drawerOpen = false;
     },
-    // Lock body scroll when drawer is open
     drawerOpen(val) {
       document.body.style.overflow = val ? 'hidden' : '';
     }
@@ -221,13 +217,11 @@ export default {
 </script>
 
 <style scoped>
-/* ===== WRAPPER ===== */
 .dashboard-wrapper {
   display: flex;
   min-height: 100vh;
 }
 
-/* ===== DESKTOP SIDEBAR ===== */
 .sidebar {
   width: 260px;
   min-width: 260px;
@@ -272,14 +266,12 @@ export default {
   border-color: rgba(0, 242, 254, 0.15);
 }
 
-/* ===== DESKTOP CONTENT ===== */
 .dashboard-content {
   overflow-x: hidden;
   min-height: 100vh;
   background: radial-gradient(circle at 10% 20%, rgba(10, 14, 23, 0.95) 0%, rgba(15, 23, 42, 0.9) 90%);
 }
 
-/* ===== MOBILE TOP BAR ===== */
 .mobile-topbar {
   height: 56px;
   background: rgba(8, 12, 20, 0.98);
@@ -304,7 +296,7 @@ export default {
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* ===== SLIDE-IN DRAWER ===== */
+
 .drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -354,7 +346,7 @@ export default {
   background: rgba(255,255,255,0.06);
 }
 
-/* ===== DRAWER TRANSITIONS ===== */
+
 .fade-backdrop-enter-active,
 .fade-backdrop-leave-active {
   transition: opacity 0.25s ease;
@@ -373,7 +365,7 @@ export default {
   transform: translateX(100%);
 }
 
-/* ===== MISC ===== */
+
 .tiny-text {
   font-size: 0.65rem;
   font-weight: 500;

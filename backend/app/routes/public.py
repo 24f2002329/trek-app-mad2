@@ -1,10 +1,11 @@
+import datetime as dt
 from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models.trek import Trek
 from app.models.user import User
 from app.models.booking import Booking
 from app.utils.cache import cached
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, desc
 import calendar
 
 public_bp = Blueprint("public", __name__, url_prefix="/api/public")
@@ -17,13 +18,12 @@ def public_stats():
     total_staff = User.query.filter_by(role=User.ROLE_STAFF).count()
     total_bookings = Booking.query.count()
     
-    # 1. Difficulty distribution
+    ## Difficulty distribution
     difficulty_counts = db.session.query(
-        Trek.difficulty, func.count(Trek.id)
-    ).group_by(Trek.difficulty).all()
+        Trek.difficulty, func.count(Trek.id)).group_by(Trek.difficulty).all()
     difficulty_dist = {diff: count for diff, count in difficulty_counts}
     
-    # 2. Top Treks (by participants)
+    ## Top Treks (by participants)
     top_treks_query = Trek.query.order_by(Trek.current_participants.desc()).limit(5).all()
     top_treks = []
     for t in top_treks_query:
@@ -32,18 +32,16 @@ def public_stats():
             "name": t.name,
             "location": t.location,
             "current_participants": t.current_participants,
-            "max_slots": t.max_slots
-        })
+            "max_slots": t.max_slots})
         
-    # 3. Booking trends
+    ## Booking trends
     trends_query = db.session.query(
         extract('year', Booking.booking_date).label('year'),
         extract('month', Booking.booking_date).label('month'),
-        func.count(Booking.id).label('count')
-    ).filter(Booking.status != Booking.STATUS_CANCELLED).group_by('year', 'month').order_by('year', 'month').limit(6).all()
+        func.count(Booking.id).label('count')).filter(Booking.status != Booking.STATUS_CANCELLED).group_by('year', 'month').order_by(desc('year'), desc('month')).limit(6).all()
     
     booking_trends = []
-    for year, month, count in trends_query:
+    for year, month, count in reversed(trends_query):
         if year is not None and month is not None:
             month_name = calendar.month_abbr[int(month)]
             booking_trends.append({
@@ -58,8 +56,8 @@ def public_stats():
         "total_bookings": max(total_bookings, 620),
         "difficulty_distribution": difficulty_dist,
         "top_treks": top_treks,
-        "booking_trends": booking_trends
-    })
+        "booking_trends": booking_trends})
+
 
 @public_bp.route("/treks", methods=["GET"])
 @cached(timeout=300, key_prefix="public_treks")
@@ -69,7 +67,7 @@ def public_treks():
     location = request.args.get("location", "")
     duration = request.args.get("duration", "")
     
-    query = Trek.query.filter(Trek.status.in_(["Approved","Open"]))
+    query = Trek.query.filter_by(status="Open")
     
     if search:
         query = query.filter(
@@ -97,42 +95,49 @@ def public_treks():
         
     treks = query.all()
     
-    import datetime as dt
     result = []
     for t in treks:
         booking_closed = False
         if t.status != "Open":
+            booking_closed = True
+        elif t.available_slots <= 0:
             booking_closed = True
         elif t.booking_close_time:
             close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
             if dt.datetime.now(dt.timezone.utc) > close_time:
                 booking_closed = True
                 
-        result.append({
-            "id": t.id,
-            "name": t.name,
-            "description": t.description,
-            "location": t.location,
-            "difficulty": t.difficulty,
-            "duration": t.duration,
-            "current_participants": t.current_participants,
-            "max_slots": t.max_slots,
-            "slots_left": 0 if booking_closed else t.available_slots,
-            "start_date": t.start_date.isoformat() if t.start_date else "",
-            "end_date": t.end_date.isoformat() if t.end_date else "",
-            "status": t.status,
-            "booking_close_time": (t.booking_close_time.isoformat() + "Z") if t.booking_close_time else "",
-            "booking_closed": booking_closed
-        })
+        if not booking_closed:
+            result.append({
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "location": t.location,
+                "difficulty": t.difficulty,
+                "duration": t.duration,
+                "current_participants": t.current_participants,
+                "max_slots": t.max_slots,
+                "slots_left": t.available_slots,
+                "start_date": t.start_date.isoformat() if t.start_date else "",
+                "end_date": t.end_date.isoformat() if t.end_date else "",
+                "status": t.status,
+                "booking_close_time": (t.booking_close_time.isoformat() + "Z") if t.booking_close_time else "",
+                "booking_closed": booking_closed})
     return jsonify(result)
+
+
 
 @public_bp.route("/treks/<int:trek_id>", methods=["GET"])
 @cached(timeout=300, key_prefix="public_trek_detail")
 def public_trek_detail(trek_id):
     t = Trek.query.get_or_404(trek_id)
+    if t.status in ["Pending", "Approved"]:
+        return jsonify({"message": "Trek not found or not available"}), 404
     import datetime as dt
     booking_closed = False
     if t.status != "Open":
+        booking_closed = True
+    elif t.available_slots <= 0:
         booking_closed = True
     elif t.booking_close_time:
         close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
@@ -156,6 +161,26 @@ def public_trek_detail(trek_id):
         "booking_closed": booking_closed,
         "assigned_staff": {
             "id": t.assigned_staff.id,
-            "name": t.assigned_staff.name
+            "name": t.assigned_staff.name,
+            "email": t.assigned_staff.email,
+            "contact": t.assigned_staff.staff_profile.contact if t.assigned_staff.staff_profile else "",
+            "experience_years": t.assigned_staff.staff_profile.experience_years if t.assigned_staff.staff_profile else 0,
+            "skills": t.assigned_staff.staff_profile.skills if t.assigned_staff.staff_profile else "",
+            "bio": t.assigned_staff.staff_profile.bio if t.assigned_staff.staff_profile else ""
         } if t.assigned_staff else None
-    })
+        })
+
+
+
+@public_bp.route("/system-status", methods=["GET"])
+@cached(timeout=60, key_prefix="public_system_status")
+def public_system_status():
+    status = "online"
+    try:
+        from sqlalchemy import text
+        db.session.execute(text("SELECT 1"))
+    except:
+        status = "offline"
+        
+    return jsonify({"status": status})
+

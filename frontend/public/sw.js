@@ -1,4 +1,4 @@
-const CACHE_NAME = 'treksphere-cache-v1';
+const CACHE_NAME = 'treksphere-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -33,10 +33,16 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event: network first, fallback to cache
+// Fetch Event: never cache API calls — always go to network
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  
+
+  // Skip service worker caching for all API requests
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {

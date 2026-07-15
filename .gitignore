@@ -3,13 +3,8 @@ __pycache__/
 *.pyc
 venv/
 .venv/
-.env
+# .env
 
-# SQLite
-*.db
-
-# Flask
-instance/
 
 # Vue
 node_modules/
@@ -22,7 +17,4 @@ dist/
 celerybeat-schedule*
 
 backend/exports/
-
 backend/logs/
-
-project-documents/

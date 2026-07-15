@@ -1,3 +1,4 @@
+import re
 from flask import Blueprint, request, jsonify, g
 from app.extensions import db
 from app.models.user import User
@@ -15,7 +16,6 @@ def register():
     if not name or not email or not password:
         return jsonify({"message": "Name, email, and password are required"}), 400
 
-    import re
     if len(name.strip()) < 3:
         return jsonify({"message": "Name must be at least 3 characters long"}), 400
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
@@ -27,7 +27,7 @@ def register():
     if existing_user:
         return jsonify({"message": "User with this email already exists"}), 409
 
-    ## Registration is only for Trekkers/users
+    ## registration is only for Trekkers/users
     user = User(
         name=name,
         email=email,
@@ -53,7 +53,6 @@ def login():
     if not email or not password:
         return jsonify({"message": "Email and password are required"}), 400
 
-    import re
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return jsonify({"message": "Invalid email address format"}), 400
     if len(password) < 8:

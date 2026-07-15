@@ -10,13 +10,14 @@ import datetime as dt
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/api/staff")
 
+
 @staff_bp.route("/dashboard-summary", methods=["GET"])
 @token_required
 @role_required(User.ROLE_STAFF)
 @cached(timeout=300, key_prefix="staff_dashboard", user_specific=True)
 def staff_dashboard_summary():
     staff_id = g.current_user.id
-    assigned_treks = Trek.query.filter_by(assigned_staff_id=staff_id).all()
+    assigned_treks = Trek.query.filter(Trek.assigned_staff_id == staff_id, Trek.status != 'Pending').all()
     
     today = dt.date.today()
     today_treks = [t for t in assigned_treks if t.start_date <= today <= t.end_date]
@@ -27,6 +28,8 @@ def staff_dashboard_summary():
     for t in assigned_treks:
         booking_closed = False
         if t.status != "Open":
+            booking_closed = True
+        elif t.available_slots <= 0:
             booking_closed = True
         elif t.booking_close_time:
             close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
@@ -58,7 +61,12 @@ def staff_dashboard_summary():
                     "email": booking.user.email if booking.user else "",
                     "slots": booking.slots_booked,
                     "status": booking.status,
-                    "booking_date": (booking.booking_date.isoformat() + "Z") if booking.booking_date else ""
+                    "booking_date": (booking.booking_date.isoformat() + "Z") if booking.booking_date else "",
+                    "phone": booking.user.phone if booking.user else "",
+                    "blood_group": booking.user.blood_group if booking.user else "",
+                    "medical_conditions": booking.user.medical_conditions if booking.user else "",
+                    "emergency_contact_name": booking.user.emergency_contact_name if booking.user else "",
+                    "emergency_contact_phone": booking.user.emergency_contact_phone if booking.user else ""
                 })
                 
     return jsonify({
@@ -72,12 +80,14 @@ def staff_dashboard_summary():
         "participants": participants
     })
 
+
+
 @staff_bp.route("/treks/<int:trek_id>/status", methods=["PUT"])
 @token_required
 @role_required(User.ROLE_STAFF, User.ROLE_ADMIN)
 def update_trek_status(trek_id):
     t = Trek.query.get_or_404(trek_id)
-    if g.current_user.role == User.ROLE_STAFF and t.assigned_staff_id != g.current_user.id:
+    if g.current_user.role == User.ROLE_STAFF and (t.assigned_staff_id != g.current_user.id or t.status == "Pending"):
         return jsonify({"message": "Permission denied for this trek"}), 403
         
     data = request.get_json() or {}
@@ -85,28 +95,36 @@ def update_trek_status(trek_id):
     if not new_status:
         return jsonify({"message": "Status is required"}), 400
         
-    if new_status not in ["Pending", "Approved", "Open", "Closed", "Completed"]:
+    if new_status not in ["Pending", "Approved", "Open", "Closed", "Completed", "Active"]:
         return jsonify({"message": f"Invalid trek status: {new_status}"}), 400
         
     t.status = new_status
     if new_status == "Open":
         t.booking_close_time = None
     elif new_status == "Completed":
+        
+        ## to prevent marking a future trek as Completed
+        if t.start_date and t.start_date > dt.date.today():
+            return jsonify({"message": "Cannot mark an upcoming trek as Completed. The trek hasn't started yet."}), 422
         for b in t.bookings:
             if b.status == Booking.STATUS_BOOKED:
                 b.status = Booking.STATUS_COMPLETED
                 
     db.session.commit()
     invalidate_trek_cache(trek_id=trek_id)
-    invalidate_booking_cache()
+    invalidate_booking_cache(guide_id=t.assigned_staff_id)
+    for b in t.bookings:
+        invalidate_booking_cache(user_id=b.user_id)
     return jsonify({"message": "Trek status updated successfully"}), 200
+
+
 
 @staff_bp.route("/treks/<int:trek_id>/slots", methods=["PUT"])
 @token_required
 @role_required(User.ROLE_STAFF)
 def update_trek_slots(trek_id):
     t = Trek.query.get_or_404(trek_id)
-    if t.assigned_staff_id != g.current_user.id:
+    if t.assigned_staff_id != g.current_user.id or t.status == "Pending":
         return jsonify({"message": "Permission denied for this trek"}), 403
         
     data = request.get_json() or {}
@@ -125,7 +143,12 @@ def update_trek_slots(trek_id):
     t.max_slots = max_slots
     db.session.commit()
     invalidate_trek_cache(trek_id=trek_id)
+    invalidate_booking_cache(guide_id=t.assigned_staff_id)
+    for b in t.bookings:
+        invalidate_booking_cache(user_id=b.user_id)
     return jsonify({"message": "Trek slots updated successfully", "max_slots": t.max_slots}), 200
+
+
 
 @staff_bp.route("/bookings/<int:booking_id>/status", methods=["PUT"])
 @token_required
@@ -136,7 +159,7 @@ def update_staff_booking_status(booking_id):
     if not trek:
         return jsonify({"message": "Associated trek not found"}), 404
         
-    if trek.assigned_staff_id != g.current_user.id:
+    if trek.assigned_staff_id != g.current_user.id or trek.status == "Pending":
         return jsonify({"message": "Permission denied for this trek"}), 403
         
     data = request.get_json() or {}
@@ -160,7 +183,17 @@ def update_staff_booking_status(booking_id):
         invalidate_trek_cache(trek_id=trek.id)
         invalidate_booking_cache(user_id=b.user_id, guide_id=g.current_user.id)
         
+
+        if new_status == Booking.STATUS_CANCELLED:
+            from app.tasks.booking_emails import send_booking_cancellation_email
+            send_booking_cancellation_email.delay(b.user.email, b.user.name, trek.name)
+        elif new_status == Booking.STATUS_BOOKED:
+            from app.tasks.booking_emails import send_booking_confirmation_email
+            send_booking_confirmation_email.delay(b.id)
+            
     return jsonify({"message": "Booking status updated successfully"}), 200
+
+
 
 @staff_bp.route("/profile", methods=["GET"])
 @token_required
@@ -178,6 +211,8 @@ def get_staff_profile():
         "bio": p.bio if p else "",
         "is_active": user.is_active
     }), 200
+
+
 
 @staff_bp.route("/profile", methods=["PUT"])
 @token_required
@@ -215,17 +250,23 @@ def update_staff_profile():
     db.session.commit()
     return jsonify({"message": "Profile updated successfully"}), 200
 
+
+
 @staff_bp.route("/treks/<int:trek_id>/close-booking", methods=["PUT"])
 @token_required
 @role_required(User.ROLE_STAFF, User.ROLE_ADMIN)
 def close_trek_booking(trek_id):
     t = Trek.query.get_or_404(trek_id)
-    if g.current_user.role == User.ROLE_STAFF and t.assigned_staff_id != g.current_user.id:
+    if g.current_user.role == User.ROLE_STAFF and (t.assigned_staff_id != g.current_user.id or t.status == "Pending"):
         return jsonify({"message": "Permission denied for this trek"}), 403
         
     t.booking_close_time = dt.datetime.now(dt.timezone.utc)
+    t.status = "Closed"
     db.session.commit()
     invalidate_trek_cache(trek_id=trek_id)
+    invalidate_booking_cache(guide_id=t.assigned_staff_id)
+    for b in t.bookings:
+        invalidate_booking_cache(user_id=b.user_id)
     return jsonify({
         "message": "Booking closed successfully",
         "booking_close_time": t.booking_close_time.isoformat() + "Z"

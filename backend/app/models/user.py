@@ -18,6 +18,12 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(20), nullable=False, default="trekker")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    phone = db.Column(db.String(20), nullable=True)
+    blood_group = db.Column(db.String(10), nullable=True)
+    medical_conditions = db.Column(db.Text, nullable=True)
+    emergency_contact_name = db.Column(db.String(100), nullable=True)
+    emergency_contact_phone = db.Column(db.String(20), nullable=True)
 
     bookings = db.relationship("Booking", backref="user", lazy=True)
 

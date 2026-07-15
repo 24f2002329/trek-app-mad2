@@ -132,12 +132,12 @@ const router = createRouter({
   routes
 });
 
-// Navigation guard
+
 router.beforeEach((to, from, next) => {
   const isAuthenticated = authService.isAuthenticated();
   const currentUser = authService.getCurrentUser();
 
-  // If user is authenticated and attempts to access the home page '/' or guest-only pages (e.g. login/register), redirect to appropriate dashboard
+  // dashboard redirect
   if ((to.path === '/' || to.meta.guestOnly) && isAuthenticated && currentUser) {
     if (currentUser.role === 'admin') {
       return next('/admin/dashboard');
@@ -148,15 +148,14 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // If page requires auth
+
   if (to.meta.requiresAuth) {
     if (!isAuthenticated) {
       return next({ path: '/login', query: { redirect: to.fullPath } });
     }
 
-    // Role verification
+ 
     if (to.meta.role && currentUser && currentUser.role !== to.meta.role) {
-      // Role mismatch, send user to their own dashboard
       if (currentUser.role === 'admin') {
         return next('/admin/dashboard');
       } else if (currentUser.role === 'trek_staff') {

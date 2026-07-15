@@ -1,6 +1,6 @@
 <template>
   <DashboardLayout role="admin">
-    <!-- Header -->
+ 
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">System <span class="text-gradient">Analytics & Reports</span></h1>
@@ -13,7 +13,6 @@
     </div>
 
     <div v-else>
-      <!-- Key Aggregates -->
       <div class="row g-4 mb-5">
         <div class="col-md-3">
           <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow text-center">
@@ -46,7 +45,6 @@
       </div>
 
       <div class="row g-4">
-        <!-- Trek Status Distribution -->
         <div class="col-md-6 col-lg-4">
           <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow h-100">
             <h5 class="fw-bold text-light mb-4"><i class="bi bi-pie-chart-fill text-info me-2"></i>Trek Statuses</h5>
@@ -56,7 +54,7 @@
           </div>
         </div>
 
-        <!-- Difficulty Breakdown -->
+
         <div class="col-md-6 col-lg-4">
           <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow h-100">
             <h5 class="fw-bold text-light mb-4"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Difficulty Levels</h5>
@@ -66,7 +64,7 @@
           </div>
         </div>
 
-        <!-- Popular Treks -->
+
         <div class="col-md-12 col-lg-4">
           <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow h-100">
             <h5 class="fw-bold text-light mb-4"><i class="bi bi-award-fill text-warning me-2"></i>Popular Treks</h5>
@@ -76,7 +74,7 @@
           </div>
         </div>
 
-        <!-- Booking Trends -->
+
         <div class="col-12">
           <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow">
             <h5 class="fw-bold text-light mb-4"><i class="bi bi-graph-up text-success me-2"></i>Monthly Booking Trends</h5>
@@ -140,7 +138,7 @@ export default {
       this.chartInstances.forEach(c => c.destroy());
       this.chartInstances = [];
 
-      // 1. Trek Status Distribution (Bar Chart)
+      // 1. Trek Status Distribution
       const statusData = this.stats.trek_status_distribution || {};
       const statusCtx = document.getElementById('statusChart').getContext('2d');
       const statusChart = new Chart(statusCtx, {
@@ -166,7 +164,7 @@ export default {
       });
       this.chartInstances.push(statusChart);
 
-      // 2. Difficulty Breakdown (Doughnut Chart)
+      // 2. Difficulty Breakdown
       const diffData = this.stats.difficulty_distribution || {};
       const diffCtx = document.getElementById('difficultyChart').getContext('2d');
       const diffChart = new Chart(diffCtx, {
@@ -189,7 +187,7 @@ export default {
       });
       this.chartInstances.push(diffChart);
 
-      // 3. Popular Treks (Horizontal Bar Chart)
+      // 3. Popular Treks
       const topTreks = this.stats.top_treks || [];
       const popCtx = document.getElementById('popularChart').getContext('2d');
       const popChart = new Chart(popCtx, {
@@ -218,7 +216,7 @@ export default {
       });
       this.chartInstances.push(popChart);
 
-      // 4. Booking Trends (Line Chart)
+      // 4. Booking Trends
       const trends = this.stats.booking_trends || [];
       const trendsLabels = trends.length > 0 ? trends.map(t => t.label) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
       const trendsValues = trends.length > 0 ? trends.map(t => t.count) : [0, 0, 0, 0, 0, 0];

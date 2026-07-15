@@ -9,6 +9,8 @@ import datetime as dt
 
 user_bp = Blueprint("user", __name__, url_prefix="/api/user")
 
+
+
 @user_bp.route("/dashboard-summary", methods=["GET"])
 @token_required
 @role_required(User.ROLE_TREKKER)
@@ -50,20 +52,30 @@ def user_dashboard_summary():
                 
     booked_trek_ids = [b.trek_id for b in bookings]
     recommended_treks = Trek.query.filter(
-        Trek.status == "Open",
-        ~Trek.id.in_(booked_trek_ids) if booked_trek_ids else True
-    ).limit(3).all()
+        Trek.status == "Open",~Trek.id.in_(booked_trek_ids) if booked_trek_ids else True).all()
     
     recommended_list = []
+    now = dt.datetime.now(dt.timezone.utc)
     for t in recommended_treks:
-        recommended_list.append({
-            "id": t.id,
-            "name": t.name,
-            "location": t.location,
-            "difficulty": t.difficulty,
-            "duration": t.duration,
-            "slots_left": t.available_slots
-        })
+        booking_closed = False
+        if t.available_slots <= 0:
+            booking_closed = True
+        elif t.booking_close_time:
+            close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
+            if now > close_time:
+                booking_closed = True
+                
+        if not booking_closed:
+            recommended_list.append({
+                "id": t.id,
+                "name": t.name,
+                "location": t.location,
+                "difficulty": t.difficulty,
+                "duration": t.duration,
+                "slots_left": t.available_slots
+            })
+            if len(recommended_list) >= 3:
+                break
         
     return jsonify({
         "upcoming_treks": upcoming_treks,
@@ -71,6 +83,8 @@ def user_dashboard_summary():
         "booking_history": booking_history,
         "recommended_treks": recommended_list
     })
+
+
 
 @user_bp.route("/profile", methods=["GET"])
 @token_required
@@ -81,8 +95,15 @@ def get_user_profile():
         "id": user.id,
         "name": user.name,
         "email": user.email,
-        "is_active": user.is_active
+        "is_active": user.is_active,
+        "phone": user.phone or "",
+        "blood_group": user.blood_group or "",
+        "medical_conditions": user.medical_conditions or "",
+        "emergency_contact_name": user.emergency_contact_name or "",
+        "emergency_contact_phone": user.emergency_contact_phone or ""
     }), 200
+
+
 
 @user_bp.route("/profile", methods=["PUT"])
 @token_required
@@ -100,6 +121,17 @@ def update_user_profile():
         if len(password) < 8:
             return jsonify({"message": "Password must be at least 8 characters long"}), 400
         user.set_password(password)
+
+    if "phone" in data:
+        user.phone = data.get("phone")
+    if "blood_group" in data:
+        user.blood_group = data.get("blood_group")
+    if "medical_conditions" in data:
+        user.medical_conditions = data.get("medical_conditions")
+    if "emergency_contact_name" in data:
+        user.emergency_contact_name = data.get("emergency_contact_name")
+    if "emergency_contact_phone" in data:
+        user.emergency_contact_phone = data.get("emergency_contact_phone")
         
     try:
         db.session.commit()

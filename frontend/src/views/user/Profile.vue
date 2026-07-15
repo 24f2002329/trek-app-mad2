@@ -1,6 +1,5 @@
 <template>
   <DashboardLayout role="user">
-    <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">Trekker <span class="text-gradient">Profile</span></h1>
@@ -8,7 +7,6 @@
       </div>
     </div>
 
-    <!-- Forms -->
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow h-100">
@@ -85,6 +83,88 @@
         </div>
       </div>
     </div>
+
+    <!-- Trek Safety & Medical Details Card -->
+    <div class="row g-4 mt-2">
+      <div class="col-12">
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow">
+          <h5 class="fw-bold text-light mb-4"><i class="bi bi-heart-pulse text-danger me-2"></i>Trek Safety & Medical Information</h5>
+
+          <div v-if="loading" class="text-center py-5">
+            <div class="spinner-border text-info" role="status"></div>
+          </div>
+
+          <form v-else @submit.prevent="updateSafetyProfile">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-secondary small">Contact Number</label>
+                <input 
+                  v-model="safetyForm.phone" 
+                  type="text" 
+                  class="form-control bg-black bg-opacity-25 border-secondary text-light py-2" 
+                  placeholder="Enter contact number"
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-secondary small">Blood Group</label>
+                <select 
+                  v-model="safetyForm.blood_group" 
+                  class="form-select bg-black bg-opacity-25 border-secondary text-light py-2"
+                >
+                  <option value="">Select Blood Group</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-secondary small">Emergency Contact Name</label>
+                <input 
+                  v-model="safetyForm.emergency_contact_name" 
+                  type="text" 
+                  class="form-control bg-black bg-opacity-25 border-secondary text-light py-2" 
+                  placeholder="Emergency contact full name"
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label text-secondary small">Emergency Contact Phone</label>
+                <input 
+                  v-model="safetyForm.emergency_contact_phone" 
+                  type="text" 
+                  class="form-control bg-black bg-opacity-25 border-secondary text-light py-2" 
+                  placeholder="Emergency contact phone number"
+                />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label text-secondary small">Medical Conditions & Allergies</label>
+              <textarea 
+                v-model="safetyForm.medical_conditions" 
+                rows="3"
+                class="form-control bg-black bg-opacity-25 border-secondary text-light py-2" 
+                placeholder="Mention any conditions, e.g. asthma, food/drug allergies, or write 'None'"
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-glow px-4 py-2" :disabled="submittingSafety">
+              <span v-if="submittingSafety" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              Save Health & Safety Details
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   </DashboardLayout>
 </template>
 
@@ -107,13 +187,21 @@ export default {
       form: {
         name: ''
       },
+      safetyForm: {
+        phone: '',
+        blood_group: '',
+        medical_conditions: '',
+        emergency_contact_name: '',
+        emergency_contact_phone: ''
+      },
       passwordForm: {
         password: '',
         confirmPassword: ''
       },
       loading: true,
       submitting: false,
-      submittingPassword: false
+      submittingPassword: false,
+      submittingSafety: false
     };
   },
   methods: {
@@ -123,6 +211,11 @@ export default {
         const data = await userService.getProfile();
         this.user = data;
         this.form.name = data.name;
+        this.safetyForm.phone = data.phone || '';
+        this.safetyForm.blood_group = data.blood_group || '';
+        this.safetyForm.medical_conditions = data.medical_conditions || '';
+        this.safetyForm.emergency_contact_name = data.emergency_contact_name || '';
+        this.safetyForm.emergency_contact_phone = data.emergency_contact_phone || '';
       } catch (err) {
         alertService.error('Failed to load profile details.');
       } finally {
@@ -138,9 +231,7 @@ export default {
       try {
         await userService.updateProfile({ name: this.form.name });
         alertService.success('Profile details updated successfully!');
-        // Update user name local ref
         this.user.name = this.form.name;
-        // Optionally update token storage if needed
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
         currentUser.name = this.form.name;
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -148,6 +239,23 @@ export default {
         alertService.error(err.response?.data?.message || 'Failed to update profile.');
       } finally {
         this.submitting = false;
+      }
+    },
+    async updateSafetyProfile() {
+      this.submittingSafety = true;
+      try {
+        await userService.updateProfile({
+          phone: this.safetyForm.phone,
+          blood_group: this.safetyForm.blood_group,
+          medical_conditions: this.safetyForm.medical_conditions,
+          emergency_contact_name: this.safetyForm.emergency_contact_name,
+          emergency_contact_phone: this.safetyForm.emergency_contact_phone
+        });
+        alertService.success('Health & safety details updated successfully!');
+      } catch (err) {
+        alertService.error(err.response?.data?.message || 'Failed to update safety details.');
+      } finally {
+        this.submittingSafety = false;
       }
     },
     async updatePassword() {

@@ -3,7 +3,7 @@
     <transition name="fade">
       <div v-if="state.show" class="confirm-backdrop d-flex align-items-center justify-content-center" @click.self="cancel">
         <div class="confirm-card bg-dark border border-secondary border-opacity-25 rounded-4 p-4 shadow-lg text-center" style="max-width: 400px; width: 90%;">
-          <!-- Icon -->
+
           <div class="confirm-icon-container mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle" :class="state.isDanger ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25' : 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25'">
             <i class="bi fs-3" :class="state.isDanger ? 'bi-exclamation-octagon-fill' : 'bi-question-circle-fill'"></i>
           </div>

@@ -7,9 +7,12 @@ from app.models.staff_profile import StaffProfile
 from app.utils.decorators import token_required, role_required
 from app.utils.cache import cached, invalidate_trek_cache, invalidate_booking_cache
 import datetime as dt
-from sqlalchemy import func
+import calendar
+from sqlalchemy import func, text, extract, desc
+
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
+
 
 # --- Dashboard Summary ---
 @admin_bp.route("/dashboard-summary", methods=["GET"])
@@ -17,10 +20,19 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 @role_required(User.ROLE_ADMIN)
 @cached(timeout=300, key_prefix="admin_summary", user_specific=False)
 def admin_dashboard_summary():
+    
     total_treks = Trek.query.count()
     total_users = User.query.filter_by(role=User.ROLE_TREKKER).count()
     total_bookings = Booking.query.count()
     total_staff = User.query.filter_by(role=User.ROLE_STAFF).count()
+    
+    
+    today = dt.date.today()
+    pending_approvals = Trek.query.filter_by(status="Pending").count()
+    upcoming_treks = Trek.query.filter(Trek.start_date > today).count()
+    treks_starting_today = Trek.query.filter(Trek.start_date == today).count()
+    
+    cancelled_bookings = Booking.query.filter_by(status=Booking.STATUS_CANCELLED).count()
     
     recent_bookings = Booking.query.order_by(Booking.booking_date.desc()).limit(5).all()
     recent_list = []
@@ -39,11 +51,70 @@ def admin_dashboard_summary():
         "total_users": total_users,
         "total_bookings": total_bookings,
         "total_staff": total_staff,
+        "pending_approvals": pending_approvals,
+        "upcoming_treks": upcoming_treks,
+        "treks_starting_today": treks_starting_today,
+        "cancelled_bookings": cancelled_bookings,
         "recent_bookings": recent_list
     })
 
 
-# --- Trek Management (CRUD) ---
+# --- System Health Status ---
+@admin_bp.route("/system-status", methods=["GET"])
+@token_required
+@role_required(User.ROLE_ADMIN)
+def system_status():
+    status = {
+        "api": "online",
+        "database": "offline",
+        "redis": "offline",
+        "celery": "offline"
+    }
+    
+    ## Test Database
+    try:
+        db.session.execute(text("SELECT 1"))
+        status["database"] = "online"
+    except Exception as e:
+        status["database"] = f"error: {str(e)}"
+        
+    ## Test Redis
+    try:
+        from app.extensions import cache_db
+        cache_db.ping()
+        status["redis"] = "online"
+    except Exception as e:
+        status["redis"] = f"error: {str(e)}"
+        
+    ## test Celery Worker
+    try:
+        from flask import current_app
+        celery = current_app.extensions.get("celery")
+        if celery:
+            i = celery.control.inspect(timeout=1.0)
+            workers = i.ping()
+            if workers:
+                status["celery"] = "online"
+            else:
+                status["celery"] = "no workers"
+        else:
+            status["celery"] = "not initialized"
+    except Exception as e:
+        status["celery"] = f"error: {str(e)}"
+        
+    ## Determine overall status
+    overall = "online"
+    if status["database"] != "online" or status["redis"] != "online" or status["celery"] != "online":
+        overall = "degraded"
+        
+    return jsonify({
+        "overall": overall,
+        "details": status
+    })
+
+
+
+# --- Trek Management ---
 @admin_bp.route("/treks", methods=["GET"])
 @token_required
 @role_required(User.ROLE_ADMIN)
@@ -55,7 +126,6 @@ def get_all_treks():
     query = Trek.query
     
     if search:
-        # Check if search is numeric to search by ID as well
         if search.isdigit():
             query = query.filter((Trek.id == int(search)) | Trek.name.ilike(f"%{search}%"))
         else:
@@ -72,6 +142,8 @@ def get_all_treks():
     for t in treks:
         booking_closed = False
         if t.status != "Open":
+            booking_closed = True
+        elif t.available_slots <= 0:
             booking_closed = True
         elif t.booking_close_time:
             close_time = t.booking_close_time.replace(tzinfo=dt.timezone.utc) if t.booking_close_time.tzinfo is None else t.booking_close_time
@@ -177,11 +249,13 @@ def create_trek():
         return jsonify({"message": f"Database error: {str(e)}"}), 500
 
 
+
 @admin_bp.route("/treks/<int:trek_id>", methods=["PUT"])
 @token_required
 @role_required(User.ROLE_ADMIN)
 def update_trek(trek_id):
     t = Trek.query.get_or_404(trek_id)
+    old_assigned_staff_id = t.assigned_staff_id
     data = request.get_json() or {}
     
     if "name" in data: t.name = data["name"]
@@ -200,8 +274,11 @@ def update_trek(trek_id):
         t.max_slots = max_slots_int
     if "status" in data:
         new_status = data["status"]
-        if new_status not in ["Pending", "Approved", "Open", "Closed", "Completed"]:
+        if new_status not in ["Pending", "Approved", "Open", "Closed", "Completed", "Active"]:
             return jsonify({"message": f"Invalid trek status: {new_status}"}), 400
+        effective_staff_id = data.get("assigned_staff_id", t.assigned_staff_id)
+        if new_status == "Approved" and not effective_staff_id:
+            return jsonify({"message": "A guide must be assigned before approving this trek."}), 422
         t.status = new_status
         if new_status == "Open":
             t.booking_close_time = None
@@ -222,12 +299,13 @@ def update_trek(trek_id):
         except ValueError:
             return jsonify({"message": "Invalid end_date format, use YYYY-MM-DD"}), 400
             
-    # Auto recalculate duration
+
     if t.start_date and t.end_date:
         t.duration = (t.end_date - t.start_date).days + 1
         if t.duration <= 0:
             return jsonify({"message": "End date must be on or after start date"}), 400
             
+
     if "booking_close_time" in data:
         booking_close_time_str = data["booking_close_time"]
         if not booking_close_time_str:
@@ -244,6 +322,7 @@ def update_trek(trek_id):
         except ValueError:
             return jsonify({"message": "Invalid booking close deadline format"}), 400
                 
+
     if "assigned_staff_id" in data:
         staff_id = data["assigned_staff_id"]
         if staff_id:
@@ -257,10 +336,19 @@ def update_trek(trek_id):
     try:
         db.session.commit()
         invalidate_trek_cache(trek_id=trek_id)
+        if old_assigned_staff_id:
+            invalidate_booking_cache(guide_id=old_assigned_staff_id)
+        if t.assigned_staff_id and t.assigned_staff_id != old_assigned_staff_id:
+            invalidate_booking_cache(guide_id=t.assigned_staff_id)
+        if t.assigned_staff_id:
+            invalidate_booking_cache(guide_id=t.assigned_staff_id)
+        for b in t.bookings:
+            invalidate_booking_cache(user_id=b.user_id)
         return jsonify({"message": "Trek updated successfully"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Database error: {str(e)}"}), 500
+
 
 
 @admin_bp.route("/treks/<int:trek_id>", methods=["DELETE"])
@@ -269,11 +357,18 @@ def update_trek(trek_id):
 def delete_trek(trek_id):
     t = Trek.query.get_or_404(trek_id)
     try:
-        # Cascade delete bookings manually to avoid constraints issues
+        booked_user_ids = [b.user_id for b in t.bookings]
+        assigned_staff_id = t.assigned_staff_id
+
+        ## cascade delete bookings manually to avoid constraints issues
         Booking.query.filter_by(trek_id=trek_id).delete()
         db.session.delete(t)
         db.session.commit()
         invalidate_trek_cache(trek_id=trek_id)
+        if assigned_staff_id:
+            invalidate_booking_cache(guide_id=assigned_staff_id)
+        for uid in booked_user_ids:
+            invalidate_booking_cache(user_id=uid)
         return jsonify({"message": "Trek and associated bookings deleted successfully"}), 200
     except Exception as e:
         db.session.rollback()
@@ -337,7 +432,7 @@ def create_staff():
     
     try:
         db.session.add(staff_user)
-        db.session.flush() # populate user ID
+        db.session.flush()
         
         profile = StaffProfile(
             user_id=staff_user.id,
@@ -354,6 +449,7 @@ def create_staff():
         return jsonify({"message": f"Database error: {str(e)}"}), 500
 
 
+
 @admin_bp.route("/staff/<int:staff_id>", methods=["PUT"])
 @token_required
 @role_required(User.ROLE_ADMIN)
@@ -363,7 +459,6 @@ def update_staff(staff_id):
     
     if "name" in data: staff_user.name = data["name"]
     if "email" in data:
-        # Check if email is being updated and matches someone else
         existing = User.query.filter_by(email=data["email"]).first()
         if existing and existing.id != staff_id:
             return jsonify({"message": "Email already in use"}), 409
@@ -406,7 +501,7 @@ def toggle_staff_status(staff_id):
     return jsonify({"message": f"Staff status updated to {'Active' if staff_user.is_active else 'Deactivated'}"}), 200
 
 
-# --- User (Trekker) Management ---
+# --- User/Trekker Management ---
 @admin_bp.route("/users", methods=["GET"])
 @token_required
 @role_required(User.ROLE_ADMIN)
@@ -450,6 +545,71 @@ def toggle_user_status(user_id):
     return jsonify({"message": f"User status updated to {'Active' if user.is_active else 'Deactivated'}"}), 200
 
 
+
+@admin_bp.route("/users/<int:user_id>", methods=["GET"])
+@token_required
+@role_required(User.ROLE_ADMIN)
+def get_user_detail(user_id):
+    u = User.query.filter_by(id=user_id, role=User.ROLE_TREKKER).first_or_404()
+    bookings = []
+    for b in u.bookings:
+        t = b.trek
+        bookings.append({
+            "booking_id": b.id,
+            "trek_name": t.name if t else "Unknown",
+            "location": t.location if t else "",
+            "start_date": t.start_date.isoformat() if t and t.start_date else "",
+            "status": b.status,
+            "payment_status": b.payment_status,
+            "slots_booked": b.slots_booked,
+            "booking_date": (b.booking_date.isoformat() + "Z") if b.booking_date else ""
+        })
+    return jsonify({
+        "id": u.id,
+        "name": u.name,
+        "email": u.email,
+        "phone": u.phone or "",
+        "blood_group": u.blood_group or "",
+        "medical_conditions": u.medical_conditions or "",
+        "emergency_contact_name": u.emergency_contact_name or "",
+        "emergency_contact_phone": u.emergency_contact_phone or "",
+        "is_active": u.is_active,
+        "created_at": (u.created_at.isoformat() + "Z") if u.created_at else "",
+        "bookings_count": len(u.bookings),
+        "bookings": bookings
+    }), 200
+
+
+
+@admin_bp.route("/users/<int:user_id>", methods=["PUT"])
+@token_required
+@role_required(User.ROLE_ADMIN)
+def update_user_detail(user_id):
+    u = User.query.filter_by(id=user_id, role=User.ROLE_TREKKER).first_or_404()
+    data = request.get_json() or {}
+
+    if "name" in data and data["name"].strip():
+        u.name = data["name"].strip()
+    if "phone" in data:
+        u.phone = data["phone"].strip() or None
+    if "blood_group" in data:
+        u.blood_group = data["blood_group"].strip() or None
+    if "medical_conditions" in data:
+        u.medical_conditions = data["medical_conditions"].strip() or None
+    if "emergency_contact_name" in data:
+        u.emergency_contact_name = data["emergency_contact_name"].strip() or None
+    if "emergency_contact_phone" in data:
+        u.emergency_contact_phone = data["emergency_contact_phone"].strip() or None
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "Trekker details updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Error updating user: {str(e)}"}), 500
+
+
+
 # --- Booking Management ---
 @admin_bp.route("/bookings", methods=["GET"])
 @token_required
@@ -466,7 +626,6 @@ def get_all_bookings():
     bookings = query.all()
     result = []
     for b in bookings:
-        # Manual filtration for search query based on trekker name or trek name
         if search:
             match = False
             if b.user and search.lower() in b.user.name.lower():
@@ -492,6 +651,7 @@ def get_all_bookings():
     return jsonify(result)
 
 
+
 @admin_bp.route("/bookings/<int:booking_id>/status", methods=["PUT"])
 @token_required
 @role_required(User.ROLE_ADMIN)
@@ -510,11 +670,9 @@ def update_booking_status(booking_id):
             return jsonify({"message": "Associated trek not found"}), 404
             
         if new_status == Booking.STATUS_CANCELLED:
-            # Releasing slots
-            if old_status != Booking.STATUS_CANCELLED:
+             if old_status != Booking.STATUS_CANCELLED:
                 trek.current_participants = max(0, trek.current_participants - b.slots_booked)
         else:
-            # Activating or restoring booking
             if old_status == Booking.STATUS_CANCELLED:
                 if trek.available_slots < b.slots_booked:
                     return jsonify({"message": f"Cannot change status: only {trek.available_slots} slots left on trek"}), 400
@@ -525,33 +683,41 @@ def update_booking_status(booking_id):
         invalidate_trek_cache(trek_id=trek.id)
         invalidate_booking_cache(user_id=b.user_id, guide_id=trek.assigned_staff_id)
         
+        # Trigger email alerts on status changes
+        if new_status == Booking.STATUS_CANCELLED:
+            from app.tasks.booking_emails import send_booking_cancellation_email
+            send_booking_cancellation_email.delay(b.user.email, b.user.name, trek.name)
+        elif new_status == Booking.STATUS_BOOKED:
+            from app.tasks.booking_emails import send_booking_confirmation_email
+            send_booking_confirmation_email.delay(b.id)
+            
     return jsonify({"message": "Booking status updated successfully"}), 200
 
 
-# --- Statistics and Reports ---
+
+# --- Stats and reports ---
 @admin_bp.route("/reports/stats", methods=["GET"])
 @token_required
 @role_required(User.ROLE_ADMIN)
 def get_reports_stats():
-    # 1. Difficulty distribution
     difficulty_counts = db.session.query(
         Trek.difficulty, func.count(Trek.id)
     ).group_by(Trek.difficulty).all()
     difficulty_dist = {diff: count for diff, count in difficulty_counts}
     
-    # 2. Status distribution
+
     status_counts = db.session.query(
         Trek.status, func.count(Trek.id)
     ).group_by(Trek.status).all()
     status_dist = {status: count for status, count in status_counts}
     
-    # 3. Booking statuses
+
     booking_status_counts = db.session.query(
         Booking.status, func.count(Booking.id)
     ).group_by(Booking.status).all()
     booking_status_dist = {status: count for status, count in booking_status_counts}
     
-    # 4. Top Treks (by participants)
+
     top_treks_query = Trek.query.order_by(Trek.current_participants.desc()).limit(5).all()
     top_treks = []
     for t in top_treks_query:
@@ -563,23 +729,21 @@ def get_reports_stats():
             "max_slots": t.max_slots
         })
         
-    # 5. General summary
+
     total_slots_booked = db.session.query(func.sum(Booking.slots_booked)).filter(Booking.status != Booking.STATUS_CANCELLED).scalar() or 0
     total_bookings = Booking.query.count()
     total_users = User.query.filter_by(role=User.ROLE_TREKKER).count()
     total_staff = User.query.filter_by(role=User.ROLE_STAFF).count()
     
-    # 6. Booking trends
-    import calendar
-    from sqlalchemy import extract
+
     trends_query = db.session.query(
         extract('year', Booking.booking_date).label('year'),
         extract('month', Booking.booking_date).label('month'),
         func.count(Booking.id).label('count')
-    ).filter(Booking.status != Booking.STATUS_CANCELLED).group_by('year', 'month').order_by('year', 'month').limit(6).all()
+    ).filter(Booking.status != Booking.STATUS_CANCELLED).group_by('year', 'month').order_by(desc('year'), desc('month')).limit(6).all()
     
     booking_trends = []
-    for year, month, count in trends_query:
+    for year, month, count in reversed(trends_query):
         if year is not None and month is not None:
             month_name = calendar.month_abbr[int(month)]
             booking_trends.append({

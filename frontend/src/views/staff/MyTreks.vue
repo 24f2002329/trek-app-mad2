@@ -1,6 +1,5 @@
 <template>
   <DashboardLayout role="staff">
-    <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">My <span class="text-gradient">Assigned Treks</span></h1>
@@ -8,7 +7,6 @@
       </div>
     </div>
 
-    <!-- Assigned Treks List -->
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-info" role="status"></div>
     </div>
@@ -19,19 +17,18 @@
     </div>
 
     <div v-else class="d-flex flex-column gap-5">
-      
-      <!-- 1. ACTIVE / ONGOING SECTION -->
-      <div v-if="activeTreks.length > 0" class="section-group">
+      <!-- ACTIVE (ONGOING) SECTION -->
+       <div v-if="activeTreks.length > 0" class="section-group">
         <h4 class="h5 fw-bold text-gradient-info mb-4 d-flex align-items-center gap-2">
           <span class="status-dot bg-info"></span>
-          Active / Ongoing Treks (Approved) ({{ activeTreks.length }})
+          Active Treks ({{ activeTreks.length }})
         </h4>
         <div class="row g-4">
           <div class="col-md-6 col-xl-4" v-for="trek in activeTreks" :key="trek.id">
             <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100 position-relative hover-card">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <span class="text-info small fw-bold">ID: #{{ trek.id }}</span>
-                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ getStatusLabel(trek.status) }}</span>
               </div>
 
               <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
@@ -66,15 +63,14 @@
                   </span>
                 </div>
 
-                <!-- Operations Section -->
+
                 <div class="mt-2 d-flex flex-column gap-2 w-100">
                   <div class="d-flex gap-2">
                     <div class="flex-grow-1">
                       <select :value="trek.status" @change="updateStatus(trek.id, $event.target.value)" class="form-select form-select-sm bg-dark text-light border-secondary py-2 rounded-3 w-100">
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
                         <option value="Open">Open</option>
                         <option value="Closed">Closed</option>
+                        <option value="Active">Active</option>
                         <option value="Completed">Completed</option>
                       </select>
                     </div>
@@ -85,16 +81,88 @@
                     </div>
                   </div>
 
-                  <!-- Shortcuts -->
+
                   <div class="d-grid mt-1">
-                    <button v-if="!trek.booking_closed && trek.status === 'Open'" @click="closeBooking(trek)" class="btn btn-outline-warning btn-sm rounded-3 py-2 fw-bold mb-2">
-                      <i class="bi bi-calendar-x me-1"></i>Close Booking
-                    </button>
-                    <button v-if="trek.status === 'Approved'" @click="updateStatus(trek.id, 'Open')" class="btn btn-outline-info btn-sm rounded-3 py-2 fw-bold mb-2">
-                      <i class="bi bi-compass me-1"></i>Open Booking
-                    </button>
-                    <button v-if="['Open', 'Closed'].includes(trek.status)" @click="updateStatus(trek.id, 'Completed')" class="btn btn-outline-success btn-sm rounded-3 py-2 fw-bold">
+                    <button @click="updateStatus(trek.id, 'Completed')" class="btn btn-outline-success btn-sm rounded-3 py-2 fw-bold mb-2">
                       <i class="bi bi-check-lg me-1"></i>Complete Trek
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+       </div>
+
+
+      <!-- 2. APPROVED SECTION -->
+      <div v-if="approvedTreks.length > 0" class="section-group">
+        <h4 class="h5 fw-bold text-gradient-info mb-4 d-flex align-items-center gap-2">
+          <span class="status-dot bg-info"></span>
+          Approved Treks ({{ approvedTreks.length }})
+        </h4>
+        <div class="row g-4">
+          <div class="col-md-6 col-xl-4" v-for="trek in approvedTreks" :key="trek.id">
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100 position-relative hover-card">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="text-info small fw-bold">ID: #{{ trek.id }}</span>
+                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ getStatusLabel(trek.status) }}</span>
+              </div>
+
+              <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
+              <div class="text-secondary small mb-3"><i class="bi bi-geo-alt me-1"></i> {{ trek.location }}</div>
+
+              <div class="p-3 bg-black bg-opacity-25 rounded-3 mb-4 border border-secondary border-opacity-10">
+                <div class="row g-2 text-center">
+                  <div class="col-6 border-end border-secondary border-opacity-25">
+                    <span class="text-secondary tiny-text d-block">Duration</span>
+                    <strong class="text-light text-nowrap small">{{ trek.duration }} Days</strong>
+                  </div>
+                  <div class="col-6">
+                    <span class="text-secondary tiny-text d-block">Booked Slots</span>
+                    <strong class="text-light small">{{ trek.current_participants }} / {{ trek.max_slots }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex flex-column gap-2 mt-auto pt-3 border-top border-secondary border-opacity-10">
+                <div class="d-flex flex-column gap-1 mb-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-secondary">Start: {{ formatDate(trek.start_date) }}</span>
+                    <span class="small text-secondary">End: {{ formatDate(trek.end_date) }}</span>
+                  </div>
+                  <span class="small text-secondary mt-1" style="font-size: 0.75rem; display: block;">
+                    <i class="bi bi-calendar-x me-1"></i> Bookings: 
+                    <span :class="trek.booking_closed ? 'text-danger fw-bold' : 'text-light'">
+                      <span v-if="trek.booking_closed">Closed</span>
+                      <span v-else-if="trek.booking_close_time">{{ formatDateTime(trek.booking_close_time) }}</span>
+                      <span v-else>Open</span>
+                    </span>
+                  </span>
+                </div>
+
+
+                <div class="mt-2 d-flex flex-column gap-2 w-100">
+                  <div class="d-flex gap-2">
+                    <div class="flex-grow-1">
+                      <select :value="trek.status" @change="updateStatus(trek.id, $event.target.value)" class="form-select form-select-sm bg-dark text-light border-secondary py-2 rounded-3 w-100">
+                        <option value="Approved">Approved</option>
+                        <option value="Open">Bookings Open</option>
+                        <option value="Closed">Bookings Closed</option>
+                        <option value="Completed">Completed</option>
+                      </select>
+                    </div>
+                    <div>
+                      <button @click="openSlotsModal(trek)" class="btn btn-outline-info btn-sm py-2 rounded-3 px-3">
+                        <i class="bi bi-pencil-square"></i> Slots
+                      </button>
+                    </div>
+                  </div>
+
+
+                  <div class="d-grid mt-1">
+                    <button @click="updateStatus(trek.id, 'Open')" class="btn btn-outline-info btn-sm rounded-3 py-2 fw-bold mb-2">
+                      <i class="bi bi-compass me-1"></i>Open Booking
                     </button>
                   </div>
                 </div>
@@ -104,7 +172,7 @@
         </div>
       </div>
 
-      <!-- 2. OPEN FOR BOOKINGS SECTION -->
+      <!-- 3. OPEN FOR BOOKINGS SECTION -->
       <div v-if="openTreks.length > 0" class="section-group">
         <h4 class="h5 fw-bold text-gradient-success mb-4 d-flex align-items-center gap-2">
           <span class="status-dot bg-success"></span>
@@ -115,7 +183,7 @@
             <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100 position-relative hover-card">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <span class="text-info small fw-bold">ID: #{{ trek.id }}</span>
-                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ getStatusLabel(trek.status) }}</span>
               </div>
 
               <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
@@ -150,15 +218,14 @@
                   </span>
                 </div>
 
-                <!-- Operations Section -->
+
                 <div class="mt-2 d-flex flex-column gap-2 w-100">
                   <div class="d-flex gap-2">
                     <div class="flex-grow-1">
                       <select :value="trek.status" @change="updateStatus(trek.id, $event.target.value)" class="form-select form-select-sm bg-dark text-light border-secondary py-2 rounded-3 w-100">
-                        <option value="Pending">Pending</option>
                         <option value="Approved">Approved</option>
-                        <option value="Open">Open</option>
-                        <option value="Closed">Closed</option>
+                        <option value="Open">Bookings Open</option>
+                        <option value="Closed">Bookings Closed</option>
                         <option value="Completed">Completed</option>
                       </select>
                     </div>
@@ -169,16 +236,13 @@
                     </div>
                   </div>
 
-                  <!-- Shortcuts -->
+
                   <div class="d-grid mt-1">
-                    <button v-if="!trek.booking_closed && trek.status === 'Open'" @click="closeBooking(trek)" class="btn btn-outline-warning btn-sm rounded-3 py-2 fw-bold mb-2">
+                    <button v-if="!trek.booking_closed" @click="closeBooking(trek)" class="btn btn-outline-warning btn-sm rounded-3 py-2 fw-bold mb-2">
                       <i class="bi bi-calendar-x me-1"></i>Close Booking
                     </button>
-                    <button v-if="trek.status === 'Approved'" @click="updateStatus(trek.id, 'Open')" class="btn btn-outline-info btn-sm rounded-3 py-2 fw-bold mb-2">
-                      <i class="bi bi-compass me-1"></i>Open Booking
-                    </button>
-                    <button v-if="['Open', 'Closed'].includes(trek.status)" @click="updateStatus(trek.id, 'Completed')" class="btn btn-outline-success btn-sm rounded-3 py-2 fw-bold">
-                      <i class="bi bi-check-lg me-1"></i>Complete Trek
+                    <button @click="updateStatus(trek.id, 'Active')" class="btn btn-outline-info btn-sm rounded-3 py-2 fw-bold">
+                      <i class="bi bi-play-fill me-1"></i>Start Trek
                     </button>
                   </div>
                 </div>
@@ -188,18 +252,18 @@
         </div>
       </div>
 
-      <!-- 3. PENDING / CLOSED SECTION -->
-      <div v-if="pendingTreks.length > 0" class="section-group">
-        <h4 class="h5 fw-bold text-gradient-warning mb-4 d-flex align-items-center gap-2">
-          <span class="status-dot bg-warning"></span>
-          Pending / Closed ({{ pendingTreks.length }})
+      <!-- 4. CLOSED TREKS SECTION -->
+      <div v-if="closedTreks.length > 0" class="section-group">
+        <h4 class="h5 fw-bold text-gradient-danger mb-4 d-flex align-items-center gap-2">
+          <span class="status-dot bg-danger"></span>
+          Closed Treks ({{ closedTreks.length }})
         </h4>
         <div class="row g-4">
-          <div class="col-md-6 col-xl-4" v-for="trek in pendingTreks" :key="trek.id">
+          <div class="col-md-6 col-xl-4" v-for="trek in closedTreks" :key="trek.id">
             <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100 position-relative hover-card">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <span class="text-info small fw-bold">ID: #{{ trek.id }}</span>
-                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ getStatusLabel(trek.status) }}</span>
               </div>
 
               <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
@@ -234,16 +298,16 @@
                   </span>
                 </div>
 
-                <!-- Operations Section -->
+
                 <div class="mt-2 d-flex flex-column gap-2 w-100">
                   <div class="d-flex gap-2">
                     <div class="flex-grow-1">
                       <select :value="trek.status" @change="updateStatus(trek.id, $event.target.value)" class="form-select form-select-sm bg-dark text-light border-secondary py-2 rounded-3 w-100">
-                        <option value="Pending">Pending</option>
-                        <option value="Open">Open</option>
-                        <option value="Active">Active (Ongoing)</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Open">Bookings Open</option>
+                        <option value="Closed">Bookings Closed</option>
+                        <option value="Active">Active</option>
                         <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
                       </select>
                     </div>
                     <div>
@@ -253,16 +317,10 @@
                     </div>
                   </div>
 
-                  <!-- Shortcuts -->
+
                   <div class="d-grid mt-1">
-                    <button v-if="!trek.booking_closed && trek.status === 'Open'" @click="closeBooking(trek)" class="btn btn-outline-warning btn-sm rounded-3 py-2 fw-bold mb-2">
-                      <i class="bi bi-calendar-x me-1"></i>Close Booking
-                    </button>
-                    <button v-if="trek.status === 'Open' || trek.status === 'Pending'" @click="updateStatus(trek.id, 'Active')" class="btn btn-outline-info btn-sm rounded-3 py-2 fw-bold">
+                    <button @click="updateStatus(trek.id, 'Active')" class="btn btn-outline-info btn-sm rounded-3 py-2 fw-bold">
                       <i class="bi bi-play-fill me-1"></i>Start Trek
-                    </button>
-                    <button v-if="trek.status === 'Active'" @click="updateStatus(trek.id, 'Completed')" class="btn btn-outline-success btn-sm rounded-3 py-2 fw-bold">
-                      <i class="bi bi-check-lg me-1"></i>Complete Trek
                     </button>
                   </div>
                 </div>
@@ -272,18 +330,18 @@
         </div>
       </div>
 
-      <!-- 4. COMPLETED & CANCELLED SECTION -->
-      <div v-if="completedCancelledTreks.length > 0" class="section-group">
+      <!-- 5. COMPLETED TREKS SECTION -->
+      <div v-if="completedTreks.length > 0" class="section-group">
         <h4 class="h5 fw-bold text-gradient-secondary mb-4 d-flex align-items-center gap-2">
           <span class="status-dot bg-secondary"></span>
-          Completed Treks ({{ completedCancelledTreks.length }})
+          Completed Treks ({{ completedTreks.length }})
         </h4>
         <div class="row g-4">
-          <div class="col-md-6 col-xl-4" v-for="trek in completedCancelledTreks" :key="trek.id">
+          <div class="col-md-6 col-xl-4" v-for="trek in completedTreks" :key="trek.id">
             <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 h-100 position-relative hover-card">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <span class="text-info small fw-bold">ID: #{{ trek.id }}</span>
-                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ trek.status }}</span>
+                <span class="badge rounded-pill px-3 py-1" :class="getStatusClass(trek.status)">{{ getStatusLabel(trek.status) }}</span>
               </div>
 
               <h5 class="fw-bold text-light mb-1 mt-1">{{ trek.name }}</h5>
@@ -307,44 +365,6 @@
                   <div class="d-flex justify-content-between align-items-center">
                     <span class="small text-secondary">Start: {{ formatDate(trek.start_date) }}</span>
                     <span class="small text-secondary">End: {{ formatDate(trek.end_date) }}</span>
-                  </div>
-                  <span class="small text-secondary mt-1" style="font-size: 0.75rem; display: block;">
-                    <i class="bi bi-calendar-x me-1"></i> Bookings: 
-                    <span :class="trek.booking_closed ? 'text-danger fw-bold' : 'text-light'">
-                      <span v-if="trek.booking_closed">Closed</span>
-                      <span v-else-if="trek.booking_close_time">{{ formatDateTime(trek.booking_close_time) }}</span>
-                      <span v-else>Open</span>
-                    </span>
-                  </span>
-                </div>
-
-                <!-- Operations Section -->
-                <div class="mt-2 d-flex flex-column gap-2 w-100">
-                  <div class="d-flex gap-2">
-                    <div class="flex-grow-1">
-                      <select :value="trek.status" @change="updateStatus(trek.id, $event.target.value)" class="form-select form-select-sm bg-dark text-light border-secondary py-2 rounded-3 w-100">
-                        <option value="Pending">Pending</option>
-                        <option value="Open">Open</option>
-                        <option value="Active">Active (Ongoing)</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </div>
-                    <div>
-                      <button @click="openSlotsModal(trek)" class="btn btn-outline-info btn-sm py-2 rounded-3 px-3">
-                        <i class="bi bi-pencil-square"></i> Slots
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Shortcuts -->
-                  <div class="d-grid mt-1">
-                    <button v-if="trek.status === 'Open' || trek.status === 'Pending'" @click="updateStatus(trek.id, 'Active')" class="btn btn-outline-info btn-sm rounded-3 py-2 fw-bold">
-                      <i class="bi bi-play-fill me-1"></i>Start Trek
-                    </button>
-                    <button v-if="trek.status === 'Active'" @click="updateStatus(trek.id, 'Completed')" class="btn btn-outline-success btn-sm rounded-3 py-2 fw-bold">
-                      <i class="bi bi-check-lg me-1"></i>Complete Trek
-                    </button>
                   </div>
                 </div>
               </div>
@@ -355,7 +375,7 @@
 
     </div>
 
-    <!-- Edit Slots Modal (Teleported to body) -->
+    <!-- Edit Slots Modal -->
     <Teleport to="body">
       <div v-if="slotsModalTrek" class="slots-backdrop" @click.self="closeSlotsModal">
         <div class="slots-sheet bg-dark text-light border border-secondary border-opacity-50 rounded-4 p-4">
@@ -426,16 +446,19 @@ export default {
     };
   },
   computed: {
-    activeTreks() {
+    approvedTreks() {
       return this.treks.filter(t => t.status === 'Approved');
     },
     openTreks() {
       return this.treks.filter(t => t.status === 'Open');
     },
-    pendingTreks() {
-      return this.treks.filter(t => t.status === 'Pending' || t.status === 'Closed');
+    closedTreks() {
+      return this.treks.filter(t => t.status === 'Closed');
     },
-    completedCancelledTreks() {
+    activeTreks() {
+      return this.treks.filter(t => t.status === 'Active');
+    },
+    completedTreks() {
       return this.treks.filter(t => t.status === 'Completed');
     }
   },
@@ -476,12 +499,17 @@ export default {
     getStatusClass(status) {
       switch (status) {
         case 'Completed': return 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
-        case 'Approved': return 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
+        case 'Active': return 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
         case 'Open': return 'bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25';
         case 'Pending': return 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
         case 'Closed': return 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
         default: return 'bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25';
       }
+    },
+    getStatusLabel(status) {
+      if (status === 'Open') return 'Bookings Open';
+      if (status === 'Closed') return 'Bookings Closed';
+      return status;
     },
     async updateStatus(trekId, newStatus) {
       try {
@@ -544,7 +572,7 @@ export default {
   border-color: rgba(0, 242, 254, 0.4) !important;
 }
 
-/* Modal overlay styling */
+
 .slots-backdrop {
   position: fixed;
   inset: 0;
@@ -567,7 +595,7 @@ export default {
   to { transform: scale(1); opacity: 1; }
 }
 
-/* Section styling */
+
 .text-gradient-info {
   background: linear-gradient(135deg, #00f2fe, #4facfe);
   -webkit-background-clip: text;

@@ -1,6 +1,5 @@
 <template>
   <div class="container py-5">
-    <!-- Header -->
     <div class="row align-items-center mb-5 text-center text-md-start">
       <div class="col-md-8">
         <h1 class="display-5 fw-bold text-light">TrekSphere <span class="text-gradient">Public Analytics</span></h1>
@@ -13,13 +12,11 @@
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-info" role="status"></div>
     </div>
 
     <div v-else>
-      <!-- Key Statistics -->
       <div class="row g-4 mb-5">
         <div class="col-6 col-lg-3">
           <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 shadow text-center">
@@ -51,7 +48,7 @@
         </div>
       </div>
 
-      <!-- Charts Section -->
+
       <div class="row g-4">
         <!-- Difficulty Breakdown -->
         <div class="col-md-6 col-lg-4">

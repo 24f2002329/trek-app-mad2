@@ -1,20 +1,30 @@
 import os
 from flask import Blueprint, jsonify, send_from_directory, g
 from app.utils.decorators import token_required
-from app.tasks.export import export_user_history_csv
+from app.tasks.export import export_user_history_csv, export_user_bookings_csv
 
 export_bp = Blueprint("export", __name__, url_prefix="/api/user")
+
 
 @export_bp.route("/export-history", methods=["POST"])
 @token_required
 def trigger_export():
     user_id = g.current_user.id
-    # Trigger task asynchronously
+    
+    ## trigger task asynchronously
     task = export_user_history_csv.delay(user_id)
-    return jsonify({
-        "message": "Export started",
-        "task_id": task.id
-    }), 202
+    return jsonify({"message": "Export started", "task_id": task.id}), 202
+
+
+@export_bp.route("/export-bookings", methods=["POST"])
+@token_required
+def trigger_bookings_export():
+    user_id = g.current_user.id
+
+    ## trigger task asynchronously
+    task = export_user_bookings_csv.delay(user_id)
+    return jsonify({"message": "Export started", "task_id": task.id}), 202
+
 
 @export_bp.route("/export-status/<task_id>", methods=["GET"])
 @token_required
@@ -24,24 +34,18 @@ def get_export_status(task_id):
     
     if res.state == "SUCCESS":
         result = res.result
-        return jsonify({
-            "status": "SUCCESS",
-            "result": result
-        })
+        return jsonify({"status": "SUCCESS","result": result})
     elif res.state == "FAILURE":
-        return jsonify({
-            "status": "FAILURE",
-            "error": str(res.info)
-        })
+        return jsonify({"status": "FAILURE","error": str(res.info)})
     else:
-        return jsonify({
-            "status": res.state
-        })
+        return jsonify({"status": res.state})
+
 
 @export_bp.route("/download-export/<filename>", methods=["GET"])
 @token_required
 def download_export(filename):
-    # Security check: User can only download their own export file
+    
+    ##user can only download their own export file
     expected_prefix = f"user_{g.current_user.id}_"
     if not filename.startswith(expected_prefix) or ".." in filename:
         return jsonify({"message": "Access Denied"}), 403

@@ -1,6 +1,5 @@
 <template>
   <DashboardLayout role="staff">
-    <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">My <span class="text-gradient">Guide Profile</span></h1>
@@ -8,7 +7,7 @@
       </div>
     </div>
 
-    <!-- Profile Form Card -->
+
     <div class="row g-4 justify-content-center">
       <div class="col-lg-8">
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 p-4 p-md-5">
@@ -17,7 +16,6 @@
           </div>
 
           <form v-else @submit.prevent="saveProfile">
-            <!-- Header Avatar Summary -->
             <div class="d-flex flex-column flex-sm-row align-items-center gap-4 mb-5 pb-4 border-bottom border-secondary border-opacity-15">
               <div class="avatar-lg bg-gradient text-white fw-bold rounded-circle d-flex align-items-center justify-content-center">
                 {{ userInitial }}
@@ -31,7 +29,7 @@
               </div>
             </div>
 
-            <!-- Fields -->
+
             <div class="row g-4">
               <div class="col-md-6">
                 <label class="form-label text-secondary small">Full Name *</label>
@@ -65,7 +63,7 @@
               </div>
             </div>
 
-            <!-- Submit -->
+
             <div class="d-flex justify-content-end mt-5 pt-4 border-top border-secondary border-opacity-15">
               <button type="submit" class="btn btn-glow px-5 py-2 rounded-3" :disabled="submitting">
                 <span v-if="submitting" class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -133,7 +131,7 @@ export default {
         });
         alertService.success('Profile saved successfully!');
         
-        // Update name in localstorage if it changed so the navbar updates instantly
+        // update name in localstorage if it changed so the navbar updates instantly
         const userStr = localStorage.getItem('user');
         if (userStr) {
           const user = JSON.parse(userStr);

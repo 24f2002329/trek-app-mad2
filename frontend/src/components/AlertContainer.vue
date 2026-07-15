@@ -9,17 +9,17 @@
         role="alert"
       >
         <div class="d-flex align-items-center p-3">
-          <!-- Icon -->
+
           <div class="alert-icon-container me-3 d-flex align-items-center justify-content-center rounded-circle" :class="iconBgClass(alert.type)">
             <i class="bi fs-5" :class="alertIcon(alert.type)"></i>
           </div>
           
-          <!-- Message -->
+
           <div class="flex-grow-1 text-light fw-medium small pe-2">
             {{ alert.message }}
           </div>
           
-          <!-- Close button -->
+
           <button 
             type="button" 
             class="btn-close btn-close-white ms-auto border-0 p-1 opacity-75 hover-opacity-100" 
@@ -28,7 +28,7 @@
           ></button>
         </div>
         
-        <!-- Animated timer bar -->
+
         <div 
           v-if="alert.duration > 0"
           class="alert-progress-bar position-absolute bottom-0 start-0" 
@@ -84,7 +84,6 @@ export default {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Success Styles */
 .alert-success {
   background: rgba(34, 197, 94, 0.08) !important;
   border-color: rgba(34, 197, 94, 0.25) !important;
@@ -97,7 +96,6 @@ export default {
   background: #22c55e !important;
 }
 
-/* Danger Styles */
 .alert-danger {
   background: rgba(239, 68, 68, 0.08) !important;
   border-color: rgba(239, 68, 68, 0.25) !important;
@@ -110,7 +108,7 @@ export default {
   background: #ef4444 !important;
 }
 
-/* Warning Styles */
+
 .alert-warning {
   background: rgba(234, 179, 8, 0.08) !important;
   border-color: rgba(234, 179, 8, 0.25) !important;
@@ -123,7 +121,7 @@ export default {
   background: #eab308 !important;
 }
 
-/* Info Styles */
+
 .alert-info {
   background: rgba(6, 182, 212, 0.08) !important;
   border-color: rgba(6, 182, 212, 0.25) !important;
@@ -152,7 +150,7 @@ export default {
   opacity: 1 !important;
 }
 
-/* Progress bar animation */
+
 .alert-progress-bar {
   height: 3px;
   width: 100%;
@@ -170,7 +168,7 @@ export default {
   }
 }
 
-/* Vue list animations */
+
 .alert-list-enter-from {
   opacity: 0;
   transform: translateX(50px) scale(0.9);

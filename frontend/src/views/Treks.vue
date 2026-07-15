@@ -7,7 +7,6 @@
       </div>
     </div>
 
-    <!-- Search Bar -->
     <div class="card bg-dark bg-opacity-70 border-secondary border-opacity-25 shadow rounded-4 p-4 mb-5">
       <form @submit.prevent="fetchTreks" class="row g-2 align-items-center">
         <div class="col-md-9">
@@ -20,21 +19,18 @@
       </form>
     </div>
 
-    <!-- Loading State -->
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-info" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-else-if="treks.length === 0" class="text-center py-5 card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 shadow">
       <span class="display-3 mb-3 d-block text-secondary"><i class="bi bi-search"></i></span>
       <h3 class="h4 fw-bold text-light">No Treks Found</h3>
       <p class="text-secondary">Try adjusting your filters or search keywords.</p>
     </div>
 
-    <!-- Treks Grid -->
     <div v-else class="row g-4">
       <div v-for="trek in treks" :key="trek.id" class="col-md-6 col-lg-4">
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 h-100 overflow-hidden d-flex flex-column" :class="{ 'border-info': selectedTrekId === trek.id }">
@@ -84,7 +80,6 @@
       </div>
     </div>
 
-    <!-- Details Modal -->
     <div v-if="activeTrek" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content card bg-dark border-secondary border-opacity-50 text-light shadow-lg">
@@ -151,7 +146,7 @@
                     </div>
                   </div>
 
-                  <!-- Booking Widget Inside Details -->
+              
                   <div v-if="isTrekker">
                     <button v-if="bookedTrekIds.includes(activeTrek.id)" class="btn btn-secondary w-100 py-2 rounded-3 mt-3 cursor-not-allowed" disabled>
                       <i class="bi bi-check-circle-fill me-2"></i>Already Booked
@@ -176,7 +171,7 @@
       </div>
     </div>
 
-    <!-- Success Modal/Toast -->
+
     <div v-if="successMessage" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1060;">
       <div class="toast show card bg-dark border-info text-light" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header bg-dark text-info border-bottom border-secondary border-opacity-10 d-flex justify-content-between">

@@ -1,6 +1,5 @@
 <template>
   <DashboardLayout role="user">
-    <!-- Header -->
     <div class="row align-items-center mb-5">
       <div class="col-12 text-center text-md-start">
         <h1 class="display-6 fw-bold text-light">Browse <span class="text-gradient">Treks</span></h1>
@@ -8,7 +7,6 @@
       </div>
     </div>
 
-    <!-- Search/Filters -->
     <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 p-4 mb-5 shadow">
       <form @submit.prevent="fetchTreks" class="row g-3">
         <div class="col-md-4">
@@ -49,19 +47,19 @@
       </form>
     </div>
 
-    <!-- Loading State -->
+
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-info" role="status"></div>
     </div>
 
-    <!-- Empty State -->
+ 
     <div v-else-if="treks.length === 0" class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-10 rounded-4 shadow">
       <span class="display-3 mb-2 d-block text-secondary"><i class="bi bi-compass"></i></span>
       <h3 class="h5 fw-bold text-light">No Treks Found</h3>
       <p class="text-secondary mb-0">Try adjusting your filters or search keywords.</p>
     </div>
 
-    <!-- Grid -->
+
     <div v-else class="row g-4">
       <div v-for="trek in treks" :key="trek.id" class="col-md-6 col-lg-4">
         <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 shadow rounded-4 h-100 overflow-hidden d-flex flex-column hover-card">
@@ -94,7 +92,7 @@
               </div>
               <div class="d-flex justify-content-between mb-2">
                 <span class="text-secondary"><i class="bi bi-people me-1 text-info"></i>Slots:</span>
-                <span class="text-info fw-bold">{{ trek.slots_left }} / {{ trek.max_slots }}</span>
+                <span class="text-info fw-bold">{{ trek.slots_left }} / {{ trek.max_slots }} Available</span>
               </div>
               <div class="d-flex justify-content-between mb-2" v-if="trek.booking_close_time">
                 <span class="text-secondary"><i class="bi bi-alarm me-1 text-warning"></i>Deadline:</span>
@@ -124,7 +122,6 @@
           </div>
           <div class="modal-body p-4">
             <div class="row g-4">
-              <!-- Info -->
               <div class="col-md-7">
                 <h6 class="text-gradient fw-bold uppercase-label mb-2">Trail Overview</h6>
                 <p class="text-secondary small mb-4 pre-wrap" style="line-height: 1.6;">
@@ -151,7 +148,7 @@
                 </div>
               </div>
 
-              <!-- Booking Widget -->
+
               <div class="col-md-5">
                 <div class="p-4 rounded-4 bg-black bg-opacity-25 border border-secondary border-opacity-15 shadow-sm h-100 d-flex flex-column justify-content-between">
                   <div>
@@ -175,7 +172,7 @@
                     </div>
                   </div>
 
-                  <!-- Booking Inputs -->
+
                   <div>
                     <div v-if="activeTrek.booking_closed" class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger text-center small rounded-3 p-3 mb-0">
                       <i class="bi bi-exclamation-triangle-fill me-2"></i>Booking Window Closed
@@ -233,8 +230,8 @@ export default {
       this.loading = true;
       try {
         const data = await publicService.getTreks(this.filters);
-        // Filter out completed, cancelled or pending status treks for general user browsing
-        this.treks = data.filter(t => t.status === 'Open' || t.status === 'Approved');
+        // Only show Open status treks for general user browsing
+        this.treks = data.filter(t => t.status === 'Open');
         
         try {
           const summary = await userService.getDashboardSummary();

@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 
-from app.extensions import db
+from app.extensions import db, mail
 from app.config import Config
 
 
@@ -12,6 +12,7 @@ def create_app(config_class=Config):
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     db.init_app(app)               
+    mail.init_app(app)
 
     from app.utils.celery import celery_init_app
     celery_init_app(app)
@@ -23,10 +24,11 @@ def create_app(config_class=Config):
         from app import models  
         db.create_all()
 
-        ## Ensures Admin and Dummy Staff and Trekker exists on app startup
+        ## ensure Admin exists on app start
+        import os
         from app.models.user import User
         from app.models.staff_profile import StaffProfile
-        admin_email = "admin@trek.com"
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@trek.com")
         admin = User.query.filter_by(email=admin_email).first()
         if not admin:
             admin = User(
@@ -34,75 +36,9 @@ def create_app(config_class=Config):
                 email=admin_email,
                 role=User.ROLE_ADMIN
             )
-            admin.set_password("admin123")
+            admin.set_password(os.getenv("ADMIN_PASSWORD", "admin123"))
             db.session.add(admin)
-
-
-            staff_email = "staff@trek.com"
-            staff = User.query.filter_by(email=staff_email).first()
-            if not staff:
-                staff = User(
-                    name="John Guide",
-                    email=staff_email,
-                    role=User.ROLE_STAFF
-                )
-                staff.set_password("staff123")
-                db.session.add(staff)
-                db.session.flush()  ##Populate staff.id
-
-
-                profile = StaffProfile(
-                    user_id=staff.id,
-                    contact="9876543210",
-                    experience_years=5,
-                    skills="First Aid, Rock Climbing, Navigation",
-                    bio="Experienced guide who loves high-altitude peak climbs."
-                )
-                db.session.add(profile)
-
-
-            trekker_email = "trekker@trek.com"
-            trekker = User.query.filter_by(email=trekker_email).first()
-            if not trekker:
-                trekker = User(
-                    name="Jane Doe",
-                    email=trekker_email,
-                    role=User.ROLE_TREKKER
-                )
-                trekker.set_password("trekker123")
-                db.session.add(trekker)
-
-            try:
-                db.session.commit()
-                print("Default test accounts seeded successfully on app startup.")
-            except Exception as e:
-                db.session.rollback()
-                print(f"Error seeding database on startup: {e}")
-
-            # Migrate existing booking and trek statuses for consistency
-            try:
-                from app.models.booking import Booking
-                from app.models.trek import Trek
-                
-                updated = False
-                for b in Booking.query.all():
-                    if b.status in ["Confirmed", "Pending"]:
-                        b.status = Booking.STATUS_BOOKED
-                        updated = True
-                for t in Trek.query.all():
-                    if t.status == "Active":
-                        t.status = "Open"
-                        updated = True
-                    elif t.status == "Cancelled":
-                        t.status = "Closed"
-                        updated = True
-                        
-                if updated:
-                    db.session.commit()
-                    print("Seeded database migration for booking and trek statuses completed.")
-            except Exception as e:
-                db.session.rollback()
-                print(f"Error during status migration: {e}")
+            db.session.commit()
 
     @app.route("/")
     def home():

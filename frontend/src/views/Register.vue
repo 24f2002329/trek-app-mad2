@@ -7,7 +7,6 @@
         <p class="text-secondary small">Join TrekSphere as a Trekker</p>
       </div>
 
-      <!-- Alert -->
       <div v-if="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger small py-2 px-3 mb-4 rounded-3" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
       </div>
@@ -15,7 +14,6 @@
         <i class="bi bi-check-circle-fill me-1"></i> {{ success }}
       </div>
 
-      <!-- Form -->
       <form @submit.prevent="handleRegister">
         <div class="mb-3">
           <label for="name" class="form-label text-secondary small fw-bold">Full Name</label>

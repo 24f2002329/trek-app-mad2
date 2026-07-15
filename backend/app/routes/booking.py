@@ -1,3 +1,4 @@
+import datetime as dt
 from flask import Blueprint, request, jsonify, g
 from app.extensions import db
 from app.models.trek import Trek
@@ -15,7 +16,7 @@ def create_booking():
     user_id = g.current_user.id
     data = request.get_json() or {}
     trek_id = data.get("trek_id")
-    slots = 1  # Force single-slot booking
+    slots = 1               ## force single-slot booking
     
     if not trek_id:
         return jsonify({"message": "Trek ID is required"}), 400
@@ -23,8 +24,6 @@ def create_booking():
     trek = Trek.query.get_or_404(trek_id)
     if trek.status != "Open":
         return jsonify({"message": "Trek is not open for bookings"}), 400
-        
-    import datetime as dt
     if trek.booking_close_time:
         close_time = trek.booking_close_time.replace(tzinfo=dt.timezone.utc) if trek.booking_close_time.tzinfo is None else trek.booking_close_time
         if dt.datetime.now(dt.timezone.utc) > close_time:
@@ -37,12 +36,10 @@ def create_booking():
     if existing and existing.status != Booking.STATUS_CANCELLED:
         return jsonify({"message": "You have already booked this trek"}), 400
         
-    # Check for date overlaps with other active bookings
-    active_bookings = Booking.query.filter(
-        Booking.user_id == user_id,
-        Booking.status == Booking.STATUS_BOOKED,
-        Booking.trek_id != trek_id
-    ).all()
+    
+    ## check for date overlaps with other active bookings
+    active_bookings = Booking.query.filter(Booking.user_id == user_id, Booking.status == Booking.STATUS_BOOKED,
+        Booking.trek_id != trek_id).all()
     for ab in active_bookings:
         et = ab.trek
         if et and et.start_date and et.end_date and trek.start_date and trek.end_date:
@@ -53,7 +50,7 @@ def create_booking():
                     "message": f"You can't book this slot as you already have a booking for these dates (Trek: {et.name} from {start_str} to {end_str})"
                 }), 400
                 
-    if existing:  # must be STATUS_CANCELLED
+    if existing:  ## must be STATUS_CANCELLED
         existing.status = Booking.STATUS_BOOKED
         existing.slots_booked = slots
         trek.current_participants += slots
@@ -61,17 +58,16 @@ def create_booking():
             db.session.commit()
             invalidate_trek_cache(trek_id=trek_id)
             invalidate_booking_cache(user_id=user_id, guide_id=trek.assigned_staff_id)
+            
+            from app.tasks.booking_emails import send_booking_confirmation_email
+            send_booking_confirmation_email.delay(existing.id)
+            
             return jsonify({"message": "Booking request submitted successfully"}), 201
         except Exception as e:
             db.session.rollback()
             return jsonify({"message": f"Error reactivating booking: {str(e)}"}), 500
             
-    booking = Booking(
-        user_id=user_id,
-        trek_id=trek_id,
-        slots_booked=slots,
-        status=Booking.STATUS_BOOKED
-    )
+    booking = Booking(user_id=user_id, trek_id=trek_id, slots_booked=slots,status=Booking.STATUS_BOOKED)
     trek.current_participants += slots
     
     try:
@@ -79,6 +75,10 @@ def create_booking():
         db.session.commit()
         invalidate_trek_cache(trek_id=trek_id)
         invalidate_booking_cache(user_id=user_id, guide_id=trek.assigned_staff_id)
+        
+        from app.tasks.booking_emails import send_booking_confirmation_email
+        send_booking_confirmation_email.delay(booking.id)
+        
         return jsonify({"message": "Booking request submitted successfully"}), 201
     except Exception as e:
         db.session.rollback()
@@ -97,8 +97,6 @@ def cancel_booking(booking_id):
     trek = booking.trek
     if not trek:
         return jsonify({"message": "Associated trek not found"}), 404
-        
-    import datetime as dt
     today = dt.date.today()
     if trek.start_date and trek.start_date <= today:
         return jsonify({"message": "Cannot cancel a booking for a trek that has already started"}), 400
@@ -113,10 +111,16 @@ def cancel_booking(booking_id):
         db.session.commit()
         invalidate_trek_cache(trek_id=trek.id)
         invalidate_booking_cache(user_id=user_id, guide_id=trek.assigned_staff_id)
+        
+        from app.tasks.booking_emails import send_booking_cancellation_email
+        send_booking_cancellation_email.delay(booking.user.email, booking.user.name, trek.name)
+        
         return jsonify({"message": "Booking cancelled successfully"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Error cancelling booking: {str(e)}"}), 500
+
+
 
 @booking_bp.route("/bookings/<int:booking_id>/pay", methods=["POST"])
 @token_required
@@ -132,6 +136,10 @@ def pay_booking(booking_id):
     try:
         db.session.commit()
         invalidate_booking_cache(user_id=user_id, guide_id=booking.trek.assigned_staff_id)
+        
+        from app.tasks.booking_emails import send_payment_confirmation_email
+        send_payment_confirmation_email.delay(booking.id)
+        
         return jsonify({"message": "Payment simulation successful. Booking is now Paid!"}), 200
     except Exception as e:
         db.session.rollback()

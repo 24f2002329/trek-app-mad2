@@ -3,32 +3,20 @@ from app.models.trek import Trek
 from app.models.booking import Booking
 
 def get_monthly_report_data():
-    """
-    Gathers metrics and stats for the previous calendar month.
-    """
     today = datetime.date.today()
-    # First day of this month
     first_day_this_month = today.replace(day=1)
-    # Last day of last month
     last_day_last_month = first_day_this_month - datetime.timedelta(days=1)
-    # First day of last month
     first_day_last_month = last_day_last_month.replace(day=1)
-    
-    # Find treks starting in the last month
-    treks_conducted = Trek.query.filter(
-        Trek.start_date >= first_day_last_month,
-        Trek.start_date <= last_day_last_month
-    ).all()
+
+    treks_conducted = Trek.query.filter(Trek.start_date >= first_day_last_month, Trek.start_date <= last_day_last_month).all()
     
     total_conducted = len(treks_conducted)
     total_participants = 0
     trek_participant_counts = {}
     
     for t in treks_conducted:
-        bookings = Booking.query.filter_by(trek_id=t.id).filter(
-            Booking.status.in_([Booking.STATUS_BOOKED, Booking.STATUS_COMPLETED])
-        ).all()
-        slots_sum = sum(b.slots for b in bookings)
+        bookings = Booking.query.filter_by(trek_id=t.id).filter(Booking.status.in_([Booking.STATUS_BOOKED, Booking.STATUS_COMPLETED])).all()
+        slots_sum = sum(b.slots_booked for b in bookings)
         total_participants += slots_sum
         trek_participant_counts[t.name] = trek_participant_counts.get(t.name, 0) + slots_sum
         
@@ -38,11 +26,9 @@ def get_monthly_report_data():
         popular_trek_name = max(trek_participant_counts, key=trek_participant_counts.get)
         popular_trek_count = trek_participant_counts[popular_trek_name]
         
-    # Bookings made during last month
-    bookings_last_month = Booking.query.filter(
-        Booking.booking_date >= datetime.datetime.combine(first_day_last_month, datetime.time.min),
-        Booking.booking_date <= datetime.datetime.combine(last_day_last_month, datetime.time.max)
-    ).all()
+
+    bookings_last_month = Booking.query.filter(Booking.booking_date >= datetime.datetime.combine(first_day_last_month, datetime.time.min), 
+        Booking.booking_date <= datetime.datetime.combine(last_day_last_month, datetime.time.max)).all()
     
     total_bookings = len(bookings_last_month)
     booked_count = sum(1 for b in bookings_last_month if b.status == Booking.STATUS_BOOKED)
