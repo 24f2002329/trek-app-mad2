@@ -41,6 +41,15 @@ export default {
     isDashboardRoute() {
       return this.$route?.meta?.requiresAuth === true;
     }
+  },
+  mounted() {
+    fetch('https://YOUR-BACKEND.onrender.com/health', {
+        method: 'GET',
+        mode: 'no-cors',
+        cache: 'no-store'
+    }).catch(error => {
+        console.log('Backend wake-up request sent');
+    })
   }
 }
 </script>
