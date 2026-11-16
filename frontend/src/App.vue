@@ -43,7 +43,7 @@ export default {
     }
   },
   mounted() {
-    fetch('https://YOUR-BACKEND.onrender.com/health', {
+    fetch('https://api.v2.treksphere.app/', {
         method: 'GET',
         mode: 'no-cors',
         cache: 'no-store'
